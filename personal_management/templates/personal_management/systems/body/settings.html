@@ -1,0 +1,20 @@
+<header>
+    <h2 id="system-settings-title">{{ microapp.label }} · System Setup</h2>
+    <p>Lock in the rituals that keep your body performing—training, nutrition, and recovery in one cadence.</p>
+</header>
+{% if microapp.microcategories %}
+    <h3>Structure the playbooks</h3>
+    <ul>
+        {% for item in microapp.microcategories %}
+            <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% if microapp.setup_prompts %}
+    <h3>Activation checklist</h3>
+    <ul>
+        {% for step in microapp.setup_prompts %}
+            <li>{{ step }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}

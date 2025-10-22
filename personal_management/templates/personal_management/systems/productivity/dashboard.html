@@ -1,0 +1,13 @@
+<section class="card system-card">
+    <h3>Execution Rhythm</h3>
+    <p>Establish the planning and focus rituals that drive your most important work forward.</p>
+    {% if microapp.microcategories %}
+        <ul class="list-clean">
+            {% for item in microapp.microcategories %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">Outline intent, priorities, sprints, and retrospectives to power your weeks.</p>
+    {% endif %}
+</section>

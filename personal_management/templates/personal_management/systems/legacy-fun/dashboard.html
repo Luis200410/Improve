@@ -1,0 +1,13 @@
+<section class="card system-card">
+    <h3>Legacy Lab</h3>
+    <p>Curate the experiences and impact that make your story unforgettable.</p>
+    {% if microapp.microcategories %}
+        <ul class="list-clean">
+            {% for item in microapp.microcategories %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">List the memories, giving plans, and adventures you want to engineer.</p>
+    {% endif %}
+</section>

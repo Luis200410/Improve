@@ -1,0 +1,13 @@
+<section class="card system-card">
+    <h3>Performance Protocols</h3>
+    <p>Keep training, nutrition, and recovery loops synchronized with your goals.</p>
+    {% if microapp.microcategories %}
+        <ul class="list-clean">
+            {% for item in microapp.microcategories %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">Map workouts, meals, and recovery anchors to lock in your health rhythm.</p>
+    {% endif %}
+</section>

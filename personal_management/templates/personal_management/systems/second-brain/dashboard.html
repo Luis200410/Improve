@@ -1,0 +1,13 @@
+<section class="card system-card">
+    <h3>Knowledge Engine</h3>
+    <p>Design the capture-to-clarity flow that keeps your ideas compounding.</p>
+    {% if microapp.microcategories %}
+        <ul class="list-clean">
+            {% for item in microapp.microcategories %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">Sketch capture pillars and review rituals to make this brain second nature.</p>
+    {% endif %}
+</section>

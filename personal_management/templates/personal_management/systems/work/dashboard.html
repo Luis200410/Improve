@@ -1,0 +1,13 @@
+<section class="card system-card">
+    <h3>Work Orchestra</h3>
+    <p>Connect your vision, active initiatives, and delivery rituals so teams stay aligned.</p>
+    {% if microapp.microcategories %}
+        <ul class="list-clean">
+            {% for item in microapp.microcategories %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">Outline the roadmaps, rituals, and metrics that keep your work humming.</p>
+    {% endif %}
+</section>

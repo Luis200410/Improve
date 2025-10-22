@@ -32,38 +32,54 @@
     }
     .sidebar h3 {
         margin-top: 0;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        color: var(--fg-muted);
     }
     .sidebar__nav {
         list-style: none;
         padding: 0;
-        margin: 1rem 0;
+        margin: 0;
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
     }
-    .sidebar__nav li + li {
-        margin-top: 0.35rem;
+    .sidebar__item {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.75rem;
+        background: rgba(255, 255, 255, 0.02);
+        transition: border 0.2s ease, background 0.2s ease;
     }
-    .sidebar__nav a {
-        display: block;
-        padding: 0.45rem 0.6rem;
-        border-radius: 0.5rem;
-        text-decoration: none;
-        border: 1px solid transparent;
-        color: var(--fg-muted);
-        transition: border 0.2s ease, color 0.2s ease, background 0.2s ease;
-    }
-    .sidebar__nav li.active a {
+    .sidebar__item--active {
+        border-color: rgba(255, 255, 255, 0.22);
         background: rgba(255, 255, 255, 0.08);
-        color: var(--fg-primary);
-        border-color: rgba(255, 255, 255, 0.16);
     }
-    .sidebar__nav a:hover {
-        border-color: rgba(255, 255, 255, 0.16);
+    .sidebar__item a {
+        display: block;
+        padding: 0.7rem 0.75rem;
+        text-decoration: none;
         color: var(--fg-primary);
+    }
+    .sidebar__label {
+        display: block;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+    }
+    .sidebar__tagline {
+        display: block;
+        margin-top: 0.3rem;
+        font-size: 0.78rem;
+        color: var(--fg-muted);
     }
     .sidebar__hint {
         font-size: 0.85rem;
         color: var(--fg-muted);
+        margin-top: 1.5rem;
     }
     .sidebar__footer {
         margin-top: auto;
@@ -90,10 +106,46 @@
     }
     .workspace__header {
         margin-bottom: 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1.5rem;
     }
     .workspace__header p {
         color: var(--fg-muted);
         max-width: 540px;
+    }
+    .workspace__tagline {
+        margin-top: 0.65rem;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.8);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .workspace__meta {
+        font-size: 0.85rem;
+        color: var(--fg-muted);
+        margin-top: 0.5rem;
+    }
+    .workspace__meta a {
+        color: var(--fg-primary);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .workspace__meta a:hover {
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+    .onboarding-banner {
+        border: 1px dashed rgba(255, 255, 255, 0.3);
+        border-radius: 0.9rem;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--fg-muted);
+        font-size: 0.95rem;
+    }
+    .onboarding-banner strong {
+        color: var(--fg-primary);
     }
     .workspace__grid {
         display: grid;
@@ -129,6 +181,66 @@
     small {
         color: var(--fg-muted);
     }
+    .settings-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 5, 5, 0.82);
+        backdrop-filter: blur(18px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        z-index: 40;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+    .settings-modal.is-open {
+        display: flex;
+        opacity: 1;
+    }
+    .settings-dialog {
+        max-width: 760px;
+        width: 100%;
+        background: var(--bg-panel);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 1.1rem;
+        padding: 3rem 3rem 2.5rem;
+        position: relative;
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.55);
+    }
+    .settings-dialog header h2 {
+        margin-top: 0;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+    .settings-dialog p {
+        color: var(--fg-muted);
+        line-height: 1.7;
+    }
+    .settings-dialog ul {
+        margin: 1.5rem 0;
+        padding-left: 1.2rem;
+    }
+    .settings-dialog__close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: transparent;
+        border: none;
+        color: var(--fg-muted);
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+    .settings-dialog__close:hover {
+        color: var(--fg-primary);
+    }
+    .settings-dialog__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
 </style>
 {% endblock %}
 
@@ -137,78 +249,144 @@
     <aside class="sidebar">
         <h3>Business OS</h3>
         <ul class="sidebar__nav">
-            {% for microapp in microapps %}
-                <li class="{% if microapp.slug == active_microapp %}active{% endif %}">
-                    <a href="?app={{ microapp.slug }}">{{ microapp.label }}</a>
+            {% for item in sidebar_items %}
+                <li class="sidebar__item {% if item.active %}sidebar__item--active{% endif %}">
+                    <a href="{{ item.href }}">
+                        <span class="sidebar__label">{{ item.label }}</span>
+                        {% if item.tagline %}
+                            <span class="sidebar__tagline">{{ item.tagline }}</span>
+                        {% endif %}
+                    </a>
                 </li>
             {% endfor %}
         </ul>
         <p class="sidebar__hint">
-            Each microapp represents a core area of your life and business. Wire up modules here as you build them out.
+            Each arena becomes a full microapp. Explore, then wire custom workflows inside the new folders.
         </p>
         <p class="sidebar__footer"><a href="{% url 'admin:index' %}">Open admin</a> to seed data.</p>
     </aside>
     <div class="workspace">
         <header class="workspace__header">
-            <h2>{{ active_microapp_label }}</h2>
-            <p>{{ active_microapp_description }}</p>
+            <div>
+                <h2>{{ active_microapp_label }}</h2>
+                <p>{{ active_microapp_description }}</p>
+                {% if active_microapp_tagline %}
+                    <p class="workspace__tagline">{{ active_microapp_tagline }}</p>
+                {% endif %}
+            </div>
+            <div class="workspace__meta">
+                <a href="#" data-open-settings>Open system setup</a>
+            </div>
         </header>
-        <div class="workspace__grid">
-            <section class="card">
-                <h3>Areas of Life</h3>
-                {% if life_areas %}
-                    <ul class="list-clean">
-                        {% for area in life_areas %}
-                            <li>
-                                <strong>{{ area.name }}</strong> — {{ area.description|default:"No description yet." }}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="empty-state">Create your seven focus areas in the admin to unlock their microapps.</p>
+        {% if first_time_onboarding %}
+            <div class="onboarding-banner">
+                <strong>Launch playbooks:</strong> The setup workspace opens automatically the first time you visit a system. Capture your decisions there, then bring them to life with goals, habits, and reflections.
+            </div>
+        {% endif %}
+
+        {% if active_microapp_slug == "today" %}
+            {% if active_dashboard_template %}
+                {% include active_dashboard_template with microapp=active_microapp_data %}
+            {% endif %}
+        {% else %}
+            <div class="workspace__grid">
+                {% if active_dashboard_template %}
+                    {% include active_dashboard_template with microapp=active_microapp_data %}
                 {% endif %}
-            </section>
-            <section class="card">
-                <h3>Top Tasks</h3>
-                {% if tasks %}
-                    <ul class="list-clean">
-                        {% for task in tasks %}
-                            <li>
-                                {% if task.completed %}[x]{% else %}[ ]{% endif %}
-                                {{ task.title }}
-                                {% if task.due_date %}<small>(due {{ task.due_date }})</small>{% endif %}
-                            </li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="empty-state">You are all caught up. Add tasks in the admin panel.</p>
-                {% endif %}
-            </section>
-            <section class="card">
-                <h3>Active Habits</h3>
-                {% if habits %}
-                    <ul class="list-clean">
-                        {% for habit in habits %}
-                            <li>{{ habit.name }} — {{ habit.get_frequency_display }} • target: {{ habit.target_per_period }}</li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="empty-state">Set up habits in the admin to build daily momentum.</p>
-                {% endif %}
-            </section>
-            <section class="card">
-                <h3>Recent Reflections</h3>
-                {% if reflections %}
-                    <ul class="list-clean">
-                        {% for reflection in reflections %}
-                            <li>{{ reflection.created_at|date:"M d, Y" }} — {{ reflection.get_cadence_display }}</li>
-                        {% endfor %}
-                    </ul>
-                {% else %}
-                    <p class="empty-state">Capture your insights with a reflection entry.</p>
-                {% endif %}
-            </section>
-        </div>
+                <section class="card">
+                    <h3>Top Tasks</h3>
+                    {% if tasks %}
+                        <ul class="list-clean">
+                            {% for task in tasks %}
+                                <li>
+                                    {% if task.completed %}[x]{% else %}[ ]{% endif %}
+                                    {{ task.title }}
+                                    {% if task.due_date %}<small>(due {{ task.due_date }})</small>{% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="empty-state">You are all caught up. Add tasks in the admin panel.</p>
+                    {% endif %}
+                </section>
+                <section class="card">
+                    <h3>Active Habits</h3>
+                    {% if habits %}
+                        <ul class="list-clean">
+                            {% for habit in habits %}
+                                <li>{{ habit.name }} — {{ habit.get_frequency_display }} • target: {{ habit.target_per_period }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="empty-state">Set up habits in the admin to build daily momentum.</p>
+                    {% endif %}
+                </section>
+                <section class="card">
+                    <h3>Recent Reflections</h3>
+                    {% if reflections %}
+                        <ul class="list-clean">
+                            {% for reflection in reflections %}
+                                <li>{{ reflection.created_at|date:"M d, Y" }} — {{ reflection.get_cadence_display }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="empty-state">Capture your insights with a reflection entry.</p>
+                    {% endif %}
+                </section>
+            </div>
+        {% endif %}
     </div>
 </section>
+
+<div class="settings-modal{% if show_setup_modal %} is-open{% endif %}" data-settings-modal>
+    <div class="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="system-settings-title">
+        <button type="button" class="settings-dialog__close" data-close-settings aria-label="Close system setup">&times;</button>
+        <div class="settings-dialog__body">
+            {% if active_settings_template %}
+                {% include active_settings_template with microapp=active_microapp_data %}
+            {% endif %}
+        </div>
+        <div class="settings-dialog__actions">
+            <a class="btn" href="{% url 'admin:index' %}">Open Admin</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const modal = document.querySelector("[data-settings-modal]");
+        if (!modal) {
+            return;
+        }
+        const openers = document.querySelectorAll("[data-open-settings]");
+        const closeBtn = modal.querySelector("[data-close-settings]");
+
+        const openModal = () => {
+            modal.classList.add("is-open");
+        };
+        const closeModal = () => {
+            modal.classList.remove("is-open");
+        };
+
+        openers.forEach((trigger) => {
+            trigger.addEventListener("click", (event) => {
+                event.preventDefault();
+                openModal();
+            });
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener("click", (event) => {
+                event.preventDefault();
+                closeModal();
+            });
+        }
+
+        modal.addEventListener("click", (event) => {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    })();
+</script>
 {% endblock %}

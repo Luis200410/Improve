@@ -1,0 +1,13 @@
+<section class="card system-card">
+    <h3>Relationship Radar</h3>
+    <p>Stay intentional with the people who expand your life, work, and joy.</p>
+    {% if microapp.microcategories %}
+        <ul class="list-clean">
+            {% for item in microapp.microcategories %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">Segment your relationships so you can nurture them with purpose.</p>
+    {% endif %}
+</section>

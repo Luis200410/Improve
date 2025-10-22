@@ -1,0 +1,13 @@
+<section class="card system-card">
+    <h3>Financial Command</h3>
+    <p>Run cashflow, investing, and spending rules from a single, calm dashboard.</p>
+    {% if microapp.microcategories %}
+        <ul class="list-clean">
+            {% for item in microapp.microcategories %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">Codify the numbers you track and the decisions you revisit.</p>
+    {% endif %}
+</section>

@@ -1,0 +1,193 @@
+<style>
+    .today-grid {
+        display: grid;
+        gap: 1.25rem;
+    }
+    @media (min-width: 1080px) {
+        .today-grid {
+            grid-template-columns: 2fr 1fr;
+        }
+    }
+    .today-grid__full {
+        grid-column: 1 / -1;
+    }
+    .task-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+    }
+    .task-item__title {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+    .task-item__title span {
+        font-weight: 600;
+    }
+    .task-item small {
+        color: var(--fg-muted);
+    }
+    .section-label {
+        display: block;
+        margin-top: 1.25rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.7);
+        text-transform: uppercase;
+    }
+    .habit-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+    .habit-list span {
+        font-weight: 600;
+    }
+    .reflection-card blockquote {
+        margin: 0;
+        padding-left: 1rem;
+        border-left: 2px solid rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.85);
+        line-height: 1.7;
+    }
+    .areas-grid {
+        display: grid;
+        gap: 0.75rem;
+    }
+    .areas-grid article {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.8rem;
+        padding: 1rem 1.1rem;
+    }
+    .areas-grid h3 {
+        margin: 0 0 0.5rem;
+        font-size: 0.9rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+    .areas-grid p {
+        margin: 0;
+        color: var(--fg-muted);
+        font-size: 0.88rem;
+    }
+</style>
+
+<div class="today-grid">
+    <section class="card today-grid__full">
+        <h3>Daily Briefing</h3>
+        <p><strong>{{ today_date|date:"l, F j, Y" }}</strong></p>
+        <p>Everything that matters today—deadlines, rituals, reflections, and arena signals—flows into this command center. Shape the day here, then dive into each microapp for deeper work.</p>
+    </section>
+
+    <section class="card">
+        <h3>Critical Actions</h3>
+        {% if tasks_today %}
+            <span class="section-label">Due Today</span>
+            <ul class="list-clean">
+                {% for task in tasks_today %}
+                    <li class="task-item">
+                        <div class="task-item__title">
+                            <span>[ ]</span>
+                            <div>
+                                <div>{{ task.title }}</div>
+                                {% if task.goal %}
+                                    <small>Goal: {{ task.goal.title }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-state">No tasks due today. Use the space to get ahead of what's next.</p>
+        {% endif %}
+
+        {% if tasks_overdue %}
+            <span class="section-label">Overdue</span>
+            <ul class="list-clean">
+                {% for task in tasks_overdue|slice:":3" %}
+                    <li class="task-item">
+                        <div class="task-item__title">
+                            <span>[ ]</span>
+                            <div>
+                                <div>{{ task.title }}</div>
+                                <small>Due {{ task.due_date|date:"M j" }}</small>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if tasks_upcoming %}
+            <span class="section-label">Next Up</span>
+            <ul class="list-clean">
+                {% for task in tasks_upcoming|slice:":3" %}
+                    <li class="task-item">
+                        <div class="task-item__title">
+                            <span>[ ]</span>
+                            <div>
+                                <div>{{ task.title }}</div>
+                                <small>Due {{ task.due_date|date:"D, M j" }}</small>
+                            </div>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </section>
+
+    <section class="card">
+        <h3>Daily Systems</h3>
+        {% if active_habits %}
+            <ul class="list-clean habit-list">
+                {% for habit in active_habits|slice:":6" %}
+                    <li>
+                        <span>{{ habit.name }}</span>
+                        <small>{{ habit.get_frequency_display }} • target {{ habit.target_per_period }}</small>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-state">No active habits yet. Define them inside each microapp.</p>
+        {% endif %}
+    </section>
+
+    <section class="card reflection-card">
+        <h3>Recent Reflection</h3>
+        {% if latest_reflection %}
+            <blockquote>
+                {% if latest_reflection.highlights %}
+                    <p><strong>Highlights:</strong> {{ latest_reflection.highlights }}</p>
+                {% endif %}
+                {% if latest_reflection.lessons %}
+                    <p><strong>Lessons:</strong> {{ latest_reflection.lessons }}</p>
+                {% endif %}
+                {% if latest_reflection.next_steps %}
+                    <p><strong>Next Steps:</strong> {{ latest_reflection.next_steps }}</p>
+                {% endif %}
+            </blockquote>
+            <small>Logged {{ latest_reflection.created_at|date:"F j, Y" }} • {{ latest_reflection.get_cadence_display }}</small>
+        {% else %}
+            <p class="empty-state">Capture today’s insights once you wrap up your work.</p>
+        {% endif %}
+    </section>
+
+    <section class="card today-grid__full">
+        <h3>Arena Pulse</h3>
+        {% if life_areas %}
+            <div class="areas-grid">
+                {% for area in life_areas|slice:":6" %}
+                    <article>
+                        <h3>{{ area.name }}</h3>
+                        <p>{{ area.description|default:"Set the intention for this arena inside its system setup." }}</p>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="empty-state">Set up your arenas in the systems view so Today can surface the right signals.</p>
+        {% endif %}
+    </section>
+</div>

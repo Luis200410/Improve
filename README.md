@@ -8,7 +8,10 @@ IMPROVE is an opinionated Django starter kit that unifies proven personal growth
 - Admin dashboards for every model so you can curate data immediately
 - Admin access is locked to superusers so you can keep staff-only views in future
 - Public marketing pages plus authenticated dashboard and login flow
-- Business OS shell (sidebar + workspace) ready for wiring the seven microapps after login
+- Default Today app summarizing tasks, habits, reflections, and arenas for the current day
+- Business OS shell (sidebar + workspace) ready for wiring the eight microapps after login
+- Each microapp ships with a dashboard view plus a settings popup for system configuration
+- Dedicated template folders per arena so you can expand each microapp independently
 - Dark grid aesthetic inspired by modern productivity suites
 - Templates and forms structured for rapid iteration
 
@@ -30,6 +33,7 @@ Improve/
 ├─ manage.py
 ├─ rebolution/                # Django project settings, URLs, WSGI/ASGI entrypoints
 ├─ personal_management/       # Core app with models, admin, views, and templates
+│  └─ templates/personal_management/systems/  # Per-arena dashboards & setup popups
 ├─ templates/registration/    # Built-in auth templates (login, password flows)
 ├─ static/                    # Global static assets placeholder
 └─ requirements.txt

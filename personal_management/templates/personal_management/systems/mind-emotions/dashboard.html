@@ -1,0 +1,13 @@
+<section class="card system-card">
+    <h3>Inner Climate</h3>
+    <p>Track the practices that steady your mind, process emotions, and surface insights.</p>
+    {% if microapp.microcategories %}
+        <ul class="list-clean">
+            {% for item in microapp.microcategories %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="empty-state">Map the rituals that keep your mindset clear and resilient.</p>
+    {% endif %}
+</section>

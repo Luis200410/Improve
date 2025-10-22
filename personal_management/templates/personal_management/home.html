@@ -1,0 +1,58 @@
+{% extends "personal_management/base.html" %}
+
+{% block title %}Welcome · IMPROVE{% endblock %}
+
+{% block extra_head %}
+<style>
+    .hero {
+        max-width: 720px;
+        margin: 4rem auto;
+        padding: 3rem 3.25rem;
+        background: var(--bg-panel);
+        border-radius: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(18px);
+        text-align: center;
+    }
+    .hero h2 {
+        font-size: 2.35rem;
+        margin-bottom: 1rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+    }
+    .hero p {
+        color: var(--fg-muted);
+        line-height: 1.7;
+        margin-bottom: 1.25rem;
+        font-size: 1.05rem;
+    }
+    .hero-actions {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    .hero-actions .ghost {
+        background: transparent;
+        color: var(--fg-muted);
+        border: 1px solid rgba(255, 255, 255, 0.24);
+    }
+    .hero-actions .ghost:hover {
+        color: var(--fg-primary);
+        border-color: rgba(255, 255, 255, 0.4);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <h2>Grow with intentional structure</h2>
+    <p>IMPROVE unifies goals, habits, tasks, and reflections into a single personal growth system backed by a business-grade operating environment.</p>
+    <p>Draft your seven arenas of life, publish microapps that run them, and iterate on the playbooks that move your mission forward.</p>
+    <div class="hero-actions">
+        <a class="btn" href="{% url 'login' %}">Launch Command Center</a>
+        <a class="btn ghost" href="{% url 'about' %}">Explore the Framework</a>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends "personal_management/base.html" %}
+
+{% block title %}Command Center · IMPROVE{% endblock %}
+
+{% block extra_head %}
+<style>
+    .app-main {
+        padding: 0;
+    }
+    .app-shell {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 2rem 2.5rem 2.5rem;
+    }
+    @media (min-width: 900px) {
+        .app-shell {
+            flex-direction: row;
+            align-items: stretch;
+        }
+    }
+    .sidebar {
+        flex: 0 0 260px;
+        background: var(--bg-panel);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        backdrop-filter: blur(22px);
+        display: flex;
+        flex-direction: column;
+    }
+    .sidebar h3 {
+        margin-top: 0;
+        margin-bottom: 0.25rem;
+    }
+    .sidebar__nav {
+        list-style: none;
+        padding: 0;
+        margin: 1rem 0;
+        flex: 1;
+    }
+    .sidebar__nav li + li {
+        margin-top: 0.35rem;
+    }
+    .sidebar__nav a {
+        display: block;
+        padding: 0.45rem 0.6rem;
+        border-radius: 0.5rem;
+        text-decoration: none;
+        border: 1px solid transparent;
+        color: var(--fg-muted);
+        transition: border 0.2s ease, color 0.2s ease, background 0.2s ease;
+    }
+    .sidebar__nav li.active a {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--fg-primary);
+        border-color: rgba(255, 255, 255, 0.16);
+    }
+    .sidebar__nav a:hover {
+        border-color: rgba(255, 255, 255, 0.16);
+        color: var(--fg-primary);
+    }
+    .sidebar__hint {
+        font-size: 0.85rem;
+        color: var(--fg-muted);
+    }
+    .sidebar__footer {
+        margin-top: auto;
+        font-size: 0.9rem;
+    }
+    .sidebar__footer a {
+        color: var(--fg-primary);
+        text-decoration: none;
+        border-bottom: 1px solid transparent;
+    }
+    .sidebar__footer a:hover {
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+    .workspace {
+        flex: 1 1 auto;
+        background: var(--bg-panel);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 1rem;
+        padding: 1.8rem;
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        backdrop-filter: blur(22px);
+    }
+    .workspace__header {
+        margin-bottom: 1.5rem;
+    }
+    .workspace__header p {
+        color: var(--fg-muted);
+        max-width: 540px;
+    }
+    .workspace__grid {
+        display: grid;
+        gap: 1.25rem;
+    }
+    @media (min-width: 900px) {
+        .workspace__grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+    .card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.85rem;
+        padding: 1.25rem 1.35rem;
+        background: rgba(255, 255, 255, 0.04);
+    }
+    .card h3 {
+        margin-top: 0;
+        margin-bottom: 0.8rem;
+    }
+    .empty-state {
+        font-style: italic;
+        color: var(--fg-muted);
+    }
+    .list-clean {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+    .list-clean li + li {
+        margin-top: 0.5rem;
+    }
+    small {
+        color: var(--fg-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="app-shell">
+    <aside class="sidebar">
+        <h3>Business OS</h3>
+        <ul class="sidebar__nav">
+            {% for microapp in microapps %}
+                <li class="{% if microapp.slug == active_microapp %}active{% endif %}">
+                    <a href="?app={{ microapp.slug }}">{{ microapp.label }}</a>
+                </li>
+            {% endfor %}
+        </ul>
+        <p class="sidebar__hint">
+            Each microapp represents a core area of your life and business. Wire up modules here as you build them out.
+        </p>
+        <p class="sidebar__footer"><a href="{% url 'admin:index' %}">Open admin</a> to seed data.</p>
+    </aside>
+    <div class="workspace">
+        <header class="workspace__header">
+            <h2>{{ active_microapp_label }}</h2>
+            <p>{{ active_microapp_description }}</p>
+        </header>
+        <div class="workspace__grid">
+            <section class="card">
+                <h3>Areas of Life</h3>
+                {% if life_areas %}
+                    <ul class="list-clean">
+                        {% for area in life_areas %}
+                            <li>
+                                <strong>{{ area.name }}</strong> — {{ area.description|default:"No description yet." }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-state">Create your seven focus areas in the admin to unlock their microapps.</p>
+                {% endif %}
+            </section>
+            <section class="card">
+                <h3>Top Tasks</h3>
+                {% if tasks %}
+                    <ul class="list-clean">
+                        {% for task in tasks %}
+                            <li>
+                                {% if task.completed %}[x]{% else %}[ ]{% endif %}
+                                {{ task.title }}
+                                {% if task.due_date %}<small>(due {{ task.due_date }})</small>{% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-state">You are all caught up. Add tasks in the admin panel.</p>
+                {% endif %}
+            </section>
+            <section class="card">
+                <h3>Active Habits</h3>
+                {% if habits %}
+                    <ul class="list-clean">
+                        {% for habit in habits %}
+                            <li>{{ habit.name }} — {{ habit.get_frequency_display }} • target: {{ habit.target_per_period }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-state">Set up habits in the admin to build daily momentum.</p>
+                {% endif %}
+            </section>
+            <section class="card">
+                <h3>Recent Reflections</h3>
+                {% if reflections %}
+                    <ul class="list-clean">
+                        {% for reflection in reflections %}
+                            <li>{{ reflection.created_at|date:"M d, Y" }} — {{ reflection.get_cadence_display }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-state">Capture your insights with a reflection entry.</p>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+</section>
+{% endblock %}

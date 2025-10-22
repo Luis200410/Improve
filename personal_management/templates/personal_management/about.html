@@ -1,0 +1,45 @@
+{% extends "personal_management/base.html" %}
+
+{% block title %}About · IMPROVE{% endblock %}
+
+{% block extra_head %}
+<style>
+    .about-panel {
+        max-width: 860px;
+        margin: 3rem auto;
+        padding: 3rem 3.5rem;
+        background: var(--bg-panel);
+        border-radius: 1.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+    }
+    .about-panel h2 {
+        margin-top: 0;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .about-panel p,
+    .about-panel li {
+        color: var(--fg-muted);
+        line-height: 1.75;
+    }
+    .about-panel ul {
+        margin: 1.5rem 0;
+        padding-left: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="about-panel">
+    <h2>Why IMPROVE?</h2>
+    <p>IMPROVE blends the best personal management practices into one system:</p>
+    <ul>
+        <li>Mission-aligned areas of life anchor your goals.</li>
+        <li>Goals are clarified with milestones and linked tasks.</li>
+        <li>Habits keep momentum through check-ins and streak tracking.</li>
+        <li>Reflections support continuous learning and course correction.</li>
+    </ul>
+    <p>This foundation is ready for future modules such as coaching prompts, AI insights, or integrations with wearable data.</p>
+</section>
+{% endblock %}

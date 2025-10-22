@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}IMPROVE{% endblock %}</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --bg-base: #050505;
+            --bg-panel: rgba(18, 18, 18, 0.92);
+            --fg-primary: #fafafa;
+            --fg-muted: #b9b9b9;
+            --accent: #ffffff;
+            --grid-line: rgba(255, 255, 255, 0.03);
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        body.app-body {
+            margin: 0;
+            min-height: 100vh;
+            background-color: var(--bg-base);
+            background-image:
+                linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(0deg, var(--grid-line) 1px, transparent 1px);
+            background-size: 32px 32px;
+            color: var(--fg-primary);
+            display: flex;
+            flex-direction: column;
+        }
+        a {
+            color: inherit;
+        }
+        a:hover,
+        a:focus {
+            color: var(--accent);
+        }
+        .app-frame {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        header.app-topbar {
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, rgba(8, 8, 8, 0.85), rgba(25, 25, 25, 0.6));
+            backdrop-filter: blur(14px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .brand {
+            font-weight: 600;
+            font-size: 1.15rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            margin: 0;
+        }
+        .tagline {
+            margin: 0.25rem 0 0;
+            font-size: 0.85rem;
+            color: var(--fg-muted);
+        }
+        nav.app-nav {
+            display: flex;
+            gap: 1.25rem;
+            font-size: 0.95rem;
+        }
+        nav.app-nav a {
+            text-decoration: none;
+            color: var(--fg-muted);
+            transition: color 0.2s ease, opacity 0.2s ease;
+        }
+        nav.app-nav a:hover,
+        nav.app-nav a:focus,
+        nav.app-nav a.active {
+            color: var(--accent);
+        }
+        main.app-main {
+            flex: 1;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 1.5rem;
+        }
+        .messages li {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 0.65rem;
+            padding: 0.85rem 1.1rem;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 0.5rem;
+            padding: 0.75rem 0.85rem;
+            color: var(--fg-primary);
+            font-size: 1rem;
+        }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+        button,
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.65rem;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.12));
+            color: var(--bg-base);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            cursor: pointer;
+        }
+        button:hover,
+        .btn:hover {
+            border-color: rgba(255, 255, 255, 0.4);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.18));
+        }
+        footer.app-footer {
+            padding: 1.5rem 2rem;
+            font-size: 0.85rem;
+            color: var(--fg-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="app-body">
+<div class="app-frame">
+    <header class="app-topbar">
+        <div>
+            <p class="brand"><a href="{% url 'personal_management:home' %}">IMPROVE</a></p>
+            <p class="tagline">Elevate every area with a unified operating system.</p>
+        </div>
+        <nav class="app-nav">
+            <a href="{% url 'personal_management:home' %}">Home</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'personal_management:dashboard' %}">Dashboard</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+            {% endif %}
+            <a href="{% url 'about' %}">About</a>
+        </nav>
+    </header>
+    <main class="app-main">
+        {% if messages %}
+            <ul class="messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="app-footer">
+        <p>&copy; {% now "Y" %} IMPROVE. Built with Django.</p>
+    </footer>
+</div>
+</body>
+</html>

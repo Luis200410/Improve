@@ -1,0 +1,43 @@
+<section class="card body-card body-detail">
+    <h3>Workout Sessions</h3>
+    <p class="lead">Design complete sessions, assign intent, and stack exercises with precise prescriptions.</p>
+    {% if body_sessions_full %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Session</th>
+                    <th>Focus</th>
+                    <th>Scheduled</th>
+                    <th>Exercises</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for session in body_sessions_full %}
+                    <tr>
+                        <td>{{ session.title }}</td>
+                        <td>{{ session.focus|default:"—" }}</td>
+                        <td>{% if session.scheduled_for %}{{ session.scheduled_for|date:"M d, Y" }}{% else %}—{% endif %}</td>
+                        <td>
+                            {% if session.session_exercises.all %}
+                                <ul class="list-clean">
+                                    {% for section in session.session_exercises.all %}
+                                        <li>
+                                            <strong>{{ section.exercise.name }}</strong>
+                                            — {{ section.sets }} x {{ section.reps }}
+                                            {% if section.tempo %} @ {{ section.tempo }}{% endif %}
+                                            {% if section.rest_seconds %} • Rest {{ section.rest_seconds }}s{% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <span class="empty-state">No exercises assigned yet.</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty-state">No sessions yet. Build your first session by combining exercises and prescriptions.</p>
+    {% endif %}
+</section>

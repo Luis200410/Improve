@@ -1,0 +1,187 @@
+<style>
+    .productivity-tiles {
+        display: grid;
+        gap: 1rem;
+    }
+    @media (min-width: 1100px) {
+        .productivity-tiles {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+    }
+    .productivity-tile {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 1rem;
+        padding: 1.2rem 1.4rem;
+        background: rgba(255, 255, 255, 0.02);
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        transition: border 0.2s ease, transform 0.2s ease;
+    }
+    .productivity-tile:hover {
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: translateY(-2px);
+    }
+    .productivity-tile h3 {
+        margin: 0;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    .productivity-tile p {
+        margin: 0;
+        color: var(--fg-muted);
+        font-size: 0.9rem;
+    }
+    .productivity-tile .metric-chip {
+        align-self: flex-start;
+    }
+</style>
+
+<div class="productivity-tiles">
+    <a class="productivity-tile" href="?app=productivity&productivity_view=pomodoro">
+        <h3>Pomodoro Timer</h3>
+        <p>Run focus sprints, plant trees, and earn XP.</p>
+        <span class="metric-chip">Gamified forest</span>
+    </a>
+    <a class="productivity-tile" href="?app=productivity&productivity_view=blocking">
+        <h3>Blocking Apps</h3>
+        <p>Keep a living blocklist synced with your system-level tools.</p>
+        <span class="metric-chip">Focus guardrails</span>
+    </a>
+    <a class="productivity-tile" href="?app=productivity&productivity_view=weekly">
+        <h3>Weekly Reviews</h3>
+        <p>Reflect, reset, and plan the next sprint in minutes.</p>
+        <span class="metric-chip">Capture highlights</span>
+    </a>
+    <a class="productivity-tile" href="?app=productivity&productivity_view=monthly">
+        <h3>Monthly Reviews</h3>
+        <p>Zoom out on strategy, energy, and system upgrades.</p>
+        <span class="metric-chip">30-day clarity</span>
+    </a>
+    <a class="productivity-tile" href="?app=productivity&productivity_view=goals">
+        <h3>Big 4 Goals</h3>
+        <p>Keep annual pillars in view everywhere you work.</p>
+        <span class="metric-chip">Yearly compass</span>
+    </a>
+    <a class="productivity-tile" href="?app=productivity&productivity_view=habits">
+        <h3>Habit Tracking</h3>
+        <p>Mark daily completions and maintain streaks with a glance.</p>
+        <span class="metric-chip">Daily momentum</span>
+    </a>
+    <a class="productivity-tile" href="?app=productivity&productivity_view=backward">
+        <h3>Backward Engineering</h3>
+        <p>Plan milestones by working backwards from deadlines.</p>
+        <span class="metric-chip">Milestone planner</span>
+    </a>
+    <a class="productivity-tile" href="?app=productivity&productivity_view=parkinson">
+        <h3>Parkinson Law</h3>
+        <p>Compress timelines, timebox tasks, and avoid scope creep.</p>
+        <span class="metric-chip">Timeboxing</span>
+    </a>
+</div>
+
+<div class="card-productivity">
+    <h3>Focus Dashboard</h3>
+    <p class="lead">Start with the essentials: today’s deep-work blocks, upcoming reviews, and the goals that matter most.</p>
+    <div class="grid-columns three">
+        <div>
+            <h4 class="metric-title">Today</h4>
+            <div class="metric-chip">{{ tasks_today|length }} focus tasks</div>
+            <div class="metric-chip">{{ active_habits|length }} active habits</div>
+            <div class="metric-chip">{{ weekly_reviews|length }} weekly reviews logged</div>
+        </div>
+        <div>
+            <h4 class="metric-title">Upcoming</h4>
+            <div class="metric-chip">{{ tasks_upcoming|length }} tasks this week</div>
+            <div class="metric-chip">{{ monthly_reviews|length }} monthly reviews logged</div>
+            <div class="metric-chip">{{ big_four_goals|length }} big goals on deck</div>
+        </div>
+        <div>
+            <h4 class="metric-title">Quick Actions</h4>
+            <a class="btn-pill primary" href="?app=productivity&productivity_view=pomodoro">Start pomodoro</a>
+            <a class="btn-pill" href="?app=productivity&productivity_view=weekly">Run weekly review</a>
+            <a class="btn-pill" href="?app=productivity&productivity_view=goals">Check big goals</a>
+        </div>
+    </div>
+</div>
+
+<div class="grid-columns two">
+    <div class="card-productivity">
+        <h3>Focus Tasks</h3>
+        <p class="lead">Top priorities that need deep work today.</p>
+        {% if tasks_today %}
+            <ul class="timeline">
+                {% for task in tasks_today %}
+                    <li>
+                        <div>
+                            <strong>{{ task.title }}</strong>
+                            {% if task.due_date %}<span class="metric-chip">Due {{ task.due_date|date:"M d" }}</span>{% endif %}
+                            {% if task.goal %}<div class="lead" style="margin-top:0.4rem;">Goal: {{ task.goal.title }}</div>{% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-state">No tasks scheduled for today. Define your focus in the Productivity system.</p>
+        {% endif %}
+    </div>
+    <div class="card-productivity">
+        <h3>Weekly cadence</h3>
+        <p class="lead">Stay on rhythm with a quick pulse of habits and reviews.</p>
+        <ul class="habit-list">
+            {% for habit in active_habits|slice:":6" %}
+                <li class="habit-item">
+                    <div>
+                        <strong>{{ habit.name }}</strong>
+                        <div class="lead">{{ habit.get_frequency_display }} • target {{ habit.target_per_period }}</div>
+                    </div>
+                    <a class="btn-pill" href="?app=body&body_view=habits">Manage</a>
+                </li>
+            {% empty %}
+                <li class="habit-item"><span class="empty-state">Add habits in the Body + Productivity systems to create momentum.</span></li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<div class="card-productivity">
+    <h3>Reviews on Deck</h3>
+    <p class="lead">Capture learnings fast so you can return to execution with clarity.</p>
+    <div class="grid-columns two">
+        <div>
+            <h4 class="metric-title">Weekly reflections</h4>
+            <ul class="review-list">
+                {% for review in weekly_reviews|slice:":4" %}
+                    <li class="review-card">
+                        <header>
+                            <strong>{{ review.created_at|date:"M d, Y" }}</strong>
+                            <span>{{ review.get_cadence_display }}</span>
+                        </header>
+                        <div>{{ review.highlights|default:"No highlights recorded." }}</div>
+                    </li>
+                {% empty %}
+                    <li class="review-card"><span class="empty-state">No weekly reflections yet. Kick off your first review.</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div>
+            <h4 class="metric-title">Monthly reflections</h4>
+            <ul class="review-list">
+                {% for review in monthly_reviews|slice:":4" %}
+                    <li class="review-card">
+                        <header>
+                            <strong>{{ review.created_at|date:"M d, Y" }}</strong>
+                            <span>{{ review.get_cadence_display }}</span>
+                        </header>
+                        <div>{{ review.lessons|default:"No lessons captured." }}</div>
+                    </li>
+                {% empty %}
+                    <li class="review-card"><span class="empty-state">Log your first monthly review to see it here.</span></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>

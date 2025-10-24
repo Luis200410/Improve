@@ -1,0 +1,84 @@
+<div class="card-productivity" id="monthly-review">
+    <h3>Monthly Review Lab</h3>
+    <p class="lead">Zoom out. Align execution with strategy. Course-correct before drift sets in.</p>
+
+    <div class="grid-columns two">
+        <div class="card-productivity" style="background: rgba(255,255,255,0.03);">
+            <h3>Prompts</h3>
+            <ul class="timeline">
+                <li><strong>Wins</strong> — what outcomes, experiments, or learnings deserve a highlight reel?</li>
+                <li><strong>Energy</strong> — where did you feel flow vs. friction? adjust commitments accordingly.</li>
+                <li><strong>Systems</strong> — which rituals, dashboards, or automations need upgrades?</li>
+                <li><strong>Strategic bets</strong> — validate that your big 4 goals are still the right ones.</li>
+            </ul>
+        </div>
+        <div class="card-productivity" style="background: rgba(255,255,255,0.03);">
+            <h3>Review archive</h3>
+            {% if monthly_reviews %}
+                <ul class="review-list">
+                    {% for review in monthly_reviews %}
+                        <li class="review-card">
+                            <header>
+                                <strong>{{ review.created_at|date:"M Y" }}</strong>
+                                <span>{{ review.get_cadence_display }}</span>
+                            </header>
+                            <div>{{ review.highlights|default:"No highlights yet." }}</div>
+                            {% if review.lessons %}<div class="lead">Lessons: {{ review.lessons }}</div>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty-state">No monthly reviews logged. Schedule one at the end of each month.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-productivity" style="background: rgba(255,255,255,0.02);">
+        <h3>30-day commitments</h3>
+        <form class="backward-form" id="monthly-commitments">
+            <label>Theme for next month
+                <input type="text" name="theme" placeholder="e.g., Shipping v2 of the product">
+            </label>
+            <label>Top outcomes
+                <textarea name="outcomes" rows="4" placeholder="List your top 3 outcomes for the next month"></textarea>
+            </label>
+            <div class="actions-inline">
+                <button type="button" class="btn-pill primary" id="monthly-save">Save routine</button>
+                <button type="button" class="btn-pill" id="monthly-clear">Clear</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    const container = document.getElementById("monthly-review");
+    if (!container) return;
+
+    const STORAGE_KEY = "improve:monthly_commitments";
+    const form = container.querySelector("#monthly-commitments");
+    const saveBtn = container.querySelector("#monthly-save");
+    const clearBtn = container.querySelector("#monthly-clear");
+
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (saved) {
+        form.theme.value = saved.theme || "";
+        form.outcomes.value = saved.outcomes || "";
+    }
+
+    saveBtn.addEventListener("click", () => {
+        const data = {
+            theme: form.theme.value,
+            outcomes: form.outcomes.value,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        saveBtn.textContent = "Saved";
+        setTimeout(() => (saveBtn.textContent = "Save routine"), 1200);
+    });
+
+    clearBtn.addEventListener("click", () => {
+        form.reset();
+        localStorage.removeItem(STORAGE_KEY);
+    });
+})();
+</script>

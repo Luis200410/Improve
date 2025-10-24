@@ -1,13 +1,66 @@
-<section class="card system-card">
-    <h3>Execution Rhythm</h3>
-    <p>Establish the planning and focus rituals that drive your most important work forward.</p>
-    {% if microapp.microcategories %}
-        <ul class="list-clean">
-            {% for item in microapp.microcategories %}
-                <li>{{ item }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p class="empty-state">Outline intent, priorities, sprints, and retrospectives to power your weeks.</p>
-    {% endif %}
-</section>
+{% load static %}
+<style>
+    .productivity-section {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 1rem;
+        padding: 1.4rem 1.6rem;
+        display: grid;
+        gap: 1.25rem;
+    }
+    .productivity-section h1 {
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 1.05rem;
+    }
+    .productivity-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+</style>
+
+{% if productivity_view == 'overview' %}
+    {% include "personal_management/systems/productivity/overview.html" %}
+{% else %}
+    <section class="productivity-section">
+        <header class="productivity-header">
+            <div>
+                <h1>{{ productivity_view|title }}</h1>
+                <p class="lead">Switch systems without leaving the Productivity OS.</p>
+            </div>
+            <div class="productivity-actions">
+                <a href="?app=productivity" class="btn-pill">← Back to overview</a>
+                <a href="?app=productivity&productivity_view=pomodoro" class="btn-pill {% if productivity_view == 'pomodoro' %}primary{% endif %}">Pomodoro</a>
+                <a href="?app=productivity&productivity_view=blocking" class="btn-pill {% if productivity_view == 'blocking' %}primary{% endif %}">Blocking</a>
+                <a href="?app=productivity&productivity_view=weekly" class="btn-pill {% if productivity_view == 'weekly' %}primary{% endif %}">Weekly</a>
+                <a href="?app=productivity&productivity_view=monthly" class="btn-pill {% if productivity_view == 'monthly' %}primary{% endif %}">Monthly</a>
+                <a href="?app=productivity&productivity_view=goals" class="btn-pill {% if productivity_view == 'goals' %}primary{% endif %}">Big 4 Goals</a>
+                <a href="?app=productivity&productivity_view=habits" class="btn-pill {% if productivity_view == 'habits' %}primary{% endif %}">Habits</a>
+                <a href="?app=productivity&productivity_view=backward" class="btn-pill {% if productivity_view == 'backward' %}primary{% endif %}">Backward</a>
+                <a href="?app=productivity&productivity_view=parkinson" class="btn-pill {% if productivity_view == 'parkinson' %}primary{% endif %}">Parkinson</a>
+            </div>
+        </header>
+
+        <div class="productivity-panel">
+            {% if productivity_view == 'pomodoro' %}
+                {% include "personal_management/systems/productivity/pomodoro.html" %}
+            {% elif productivity_view == 'blocking' %}
+                {% include "personal_management/systems/productivity/blocking.html" %}
+            {% elif productivity_view == 'weekly' %}
+                {% include "personal_management/systems/productivity/weekly.html" %}
+            {% elif productivity_view == 'monthly' %}
+                {% include "personal_management/systems/productivity/monthly.html" %}
+            {% elif productivity_view == 'goals' %}
+                {% include "personal_management/systems/productivity/goals.html" %}
+            {% elif productivity_view == 'habits' %}
+                {% include "personal_management/systems/productivity/habits.html" %}
+            {% elif productivity_view == 'backward' %}
+                {% include "personal_management/systems/productivity/backward.html" %}
+            {% elif productivity_view == 'parkinson' %}
+                {% include "personal_management/systems/productivity/parkinson.html" %}
+            {% endif %}
+        </div>
+    </section>
+{% endif %}

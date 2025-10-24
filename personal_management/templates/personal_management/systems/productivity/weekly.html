@@ -1,0 +1,70 @@
+<div class="card-productivity" id="weekly-review">
+    <h3>Weekly Review Ritual</h3>
+    <p class="lead">Close loops, celebrate wins, and reset your operating system for the next sprint.</p>
+
+    <div class="grid-columns two">
+        <div class="card-productivity" style="background: rgba(255,255,255,0.03);">
+            <h3>Agenda</h3>
+            <ul class="timeline">
+                <li><strong>Clear inboxes</strong> — tasks, notes, messages, downloads.</li>
+                <li><strong>Look back</strong> — what moved the needle? capture highlights & lessons.</li>
+                <li><strong>Look ahead</strong> — choose top 3 outcomes for next week.</li>
+                <li><strong>Sharpen systems</strong> — adjust habits, block time, refine dashboards.</li>
+            </ul>
+        </div>
+        <div class="card-productivity" style="background: rgba(255,255,255,0.03);">
+            <h3>Review Log</h3>
+            {% if weekly_reviews %}
+                <ul class="review-list">
+                    {% for review in weekly_reviews %}
+                        <li class="review-card">
+                            <header>
+                                <strong>{{ review.created_at|date:"M d, Y" }}</strong>
+                                <span>{{ review.get_cadence_display }}</span>
+                            </header>
+                            <div>{{ review.highlights|default:"No highlights captured." }}</div>
+                            {% if review.next_steps %}<div class="lead">Next: {{ review.next_steps }}</div>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty-state">No weekly reviews yet. Log one to start building momentum.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card-productivity" style="background: rgba(255,255,255,0.02);">
+        <h3>Capture Notes</h3>
+        <p class="lead">Use this quick capture pad during your review. Notes stay in your browser so you can paste them into your knowledge system.</p>
+        <textarea id="weekly-notes" rows="6" placeholder="Highlights, lessons, blockers, commitments..."></textarea>
+        <div class="actions-inline" style="margin-top:0.8rem;">
+            <button class="btn-pill primary" id="weekly-save">Save notes</button>
+            <button class="btn-pill" id="weekly-clear">Clear</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const container = document.getElementById("weekly-review");
+    if (!container) return;
+
+    const notesField = container.querySelector("#weekly-notes");
+    const saveBtn = container.querySelector("#weekly-save");
+    const clearBtn = container.querySelector("#weekly-clear");
+    const STORAGE_KEY = "improve:weekly_notes";
+
+    notesField.value = localStorage.getItem(STORAGE_KEY) || "";
+
+    saveBtn.addEventListener("click", () => {
+        localStorage.setItem(STORAGE_KEY, notesField.value);
+        saveBtn.textContent = "Saved";
+        setTimeout(() => (saveBtn.textContent = "Save notes"), 1200);
+    });
+
+    clearBtn.addEventListener("click", () => {
+        notesField.value = "";
+        localStorage.removeItem(STORAGE_KEY);
+    });
+})();
+</script>

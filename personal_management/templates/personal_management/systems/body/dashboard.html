@@ -1,13 +1,296 @@
-<section class="card system-card">
-    <h3>Performance Protocols</h3>
-    <p>Keep training, nutrition, and recovery loops synchronized with your goals.</p>
-    {% if microapp.microcategories %}
-        <ul class="list-clean">
-            {% for item in microapp.microcategories %}
-                <li>{{ item }}</li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p class="empty-state">Map workouts, meals, and recovery anchors to lock in your health rhythm.</p>
-    {% endif %}
-</section>
+<style>
+    .body-subnav {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .body-subnav a {
+        text-decoration: none;
+        color: var(--fg-muted);
+        font-size: 0.9rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 0.45rem 0.75rem;
+        border-radius: 0.6rem;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        transition: border 0.2s ease, color 0.2s ease, background 0.2s ease;
+    }
+    .body-subnav a.active,
+    .body-subnav a:hover {
+        color: var(--fg-primary);
+        border-color: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .body-overview {
+        display: grid;
+        gap: 1.5rem;
+    }
+    @media (min-width: 1024px) {
+        .body-overview {
+            grid-template-columns: 2.5fr 1.2fr;
+        }
+    }
+    .body-overview__primary {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+    .body-session {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        padding: 1rem 1.1rem;
+        background: rgba(255, 255, 255, 0.02);
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+    }
+    .body-session--next {
+        border-style: dashed;
+        background: rgba(255, 255, 255, 0.04);
+    }
+    .body-session header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+    }
+    .body-session header strong {
+        font-size: 1.05rem;
+        letter-spacing: 0.04em;
+    }
+    .body-session__movements {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .body-session__movements li {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+    .body-overview__chips {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+        color: var(--fg-muted);
+    }
+    .body-overview__chips span {
+        padding: 0.35rem 0.65rem;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .body-overview__aside {
+        display: grid;
+        gap: 1rem;
+    }
+    @media (min-width: 640px) {
+        .body-overview__aside {
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+        }
+    }
+    .body-overview__tile h4 {
+        margin: 0 0 0.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        font-size: 0.85rem;
+    }
+    .body-overview__tile ul {
+        list-style: none;
+        margin: 0.6rem 0 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        color: var(--fg-muted);
+    }
+    .body-overview__tile ul li::before {
+        content: "•";
+        margin-right: 0.4rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    .body-overview__tile .cta {
+        margin-top: 0.8rem;
+        color: var(--fg-primary);
+        font-weight: 600;
+        letter-spacing: 0.05em;
+    }
+    a.card.body-card,
+    .body-overview__tile {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        transition: border 0.2s ease, transform 0.2s ease;
+    }
+    a.card.body-card:hover,
+    .body-overview__tile:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
+    .body-card h3 {
+        margin-top: 0;
+        margin-bottom: 0.6rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-size: 0.95rem;
+    }
+    .body-card p.lead {
+        color: var(--fg-muted);
+        margin-bottom: 1rem;
+    }
+    .body-card ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.65rem;
+    }
+    .body-card span.title {
+        font-weight: 600;
+    }
+    .body-card small {
+        color: var(--fg-muted);
+    }
+    .body-detail table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    .body-detail thead {
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        color: rgba(255, 255, 255, 0.6);
+    }
+    .body-detail th,
+    .body-detail td {
+        padding: 0.75rem 0.85rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .body-detail tbody tr:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+    .body-detail .actions {
+        display: flex;
+        gap: 0.65rem;
+    }
+    .body-detail .actions a {
+        font-size: 0.85rem;
+        text-decoration: none;
+        color: var(--fg-primary);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    }
+    .body-detail .actions a:hover {
+        border-color: rgba(255, 255, 255, 0.35);
+    }
+</style>
+
+<nav class="body-subnav">
+    <a href="?app=body" class="{% if body_view == 'overview' %}active{% endif %}">Overview</a>
+    <a href="?app=body&body_view=exercises" class="{% if body_view == 'exercises' %}active{% endif %}">Exercise Library</a>
+    <a href="?app=body&body_view=meals" class="{% if body_view == 'meals' %}active{% endif %}">Meal Library</a>
+    <a href="?app=body&body_view=sessions" class="{% if body_view == 'sessions' %}active{% endif %}">Sessions</a>
+</nav>
+
+{% if body_view == 'overview' %}
+    <section class="body-overview">
+        <div class="card body-overview__primary">
+            <h3>Today’s Sessions</h3>
+            <p class="lead">Only the work that matters today. Review focus, movements, and cues before you train.</p>
+            {% if body_today_sessions %}
+                {% for session in body_today_sessions %}
+                    <article class="body-session">
+                        <header>
+                            <strong>{{ session.title }}</strong>
+                            {% if session.focus %}<small>{{ session.focus }}</small>{% endif %}
+                        </header>
+                        {% if session.session_exercises.all %}
+                            <ul class="body-session__movements">
+                                {% for section in session.session_exercises.all %}
+                                    <li>
+                                        <span>{{ section.exercise.name }}</span>
+                                        <small>{{ section.sets }} × {{ section.reps }}{% if section.tempo %} @ {{ section.tempo }}{% endif %}{% if section.rest_seconds %} • Rest {{ section.rest_seconds }}s{% endif %}</small>
+                                        {% if section.notes %}<small>{{ section.notes }}</small>{% endif %}
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="empty-state">Add movements to this session in the Sessions dashboard.</p>
+                        {% endif %}
+                    </article>
+                {% endfor %}
+            {% else %}
+                <p class="empty-state">No sessions scheduled today.</p>
+                {% if body_next_session %}
+                    <article class="body-session body-session--next">
+                        <header>
+                            <strong>Next up: {{ body_next_session.title }}</strong>
+                            {% if body_next_session.scheduled_for %}<small>{{ body_next_session.scheduled_for|date:"M d, Y" }}</small>{% endif %}
+                        </header>
+                        {% if body_next_session.focus %}<p>{{ body_next_session.focus }}</p>{% endif %}
+                    </article>
+                {% endif %}
+            {% endif %}
+
+            <div class="body-overview__chips">
+                <span>{{ body_today_exercises|length }} movements in today’s plan</span>
+                <span>{{ body_session_count }} total sessions</span>
+            </div>
+        </div>
+
+        <div class="body-overview__aside">
+            <a class="card body-overview__tile" href="?app=body&body_view=exercises">
+                <h4>Exercise Library</h4>
+                <p>Explore {{ body_exercise_count }} movements, cues, and progressions.</p>
+                {% if body_today_exercises %}
+                    {% with first=body_today_exercises|first %}
+                        {% if first.image_url %}
+                            <img src="{{ first.image_url }}" alt="{{ first.name }} image" style="width:100%;max-height:160px;border-radius:0.6rem;object-fit:cover;margin-bottom:0.6rem;" />
+                        {% endif %}
+                    {% endwith %}
+                    <ul>
+                        {% for exercise in body_today_exercises|slice:":4" %}
+                            <li>{{ exercise.name }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-state">No movements queued for today. Design a session to surface them here.</p>
+                {% endif %}
+            </a>
+
+            <a class="card body-overview__tile" href="?app=body&body_view=meals">
+                <h4>Meal Library</h4>
+                <p>{{ body_meal_count }} fueling blueprints ready to support training.</p>
+                {% if body_today_meals %}
+                    {% with first=body_today_meals|first %}
+                        {% if first.image_url %}
+                            <img src="{{ first.image_url }}" alt="{{ first.name }} image" style="width:100%;max-height:160px;border-radius:0.6rem;object-fit:cover;margin-bottom:0.6rem;" />
+                        {% endif %}
+                    {% endwith %}
+                    <ul>
+                        {% for meal in body_today_meals %}
+                            <li>{{ meal.name }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="empty-state">Pair meals with your sessions to see them here.</p>
+                {% endif %}
+            </a>
+
+            <a class="card body-overview__tile" href="?app=body&body_view=sessions">
+                <h4>Session Builder</h4>
+                <p>Create, duplicate, and evolve {{ body_session_count }} training blueprints.</p>
+                <p class="cta">Open Sessions →</p>
+            </a>
+        </div>
+    </section>
+{% elif body_view == 'exercises' %}
+    {% include "personal_management/systems/body/exercises_detail.html" %}
+{% elif body_view == 'meals' %}
+    {% include "personal_management/systems/body/meals_detail.html" %}
+{% elif body_view == 'sessions' %}
+    {% include "personal_management/systems/body/sessions_detail.html" %}
+{% endif %}

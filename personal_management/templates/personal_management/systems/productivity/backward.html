@@ -1,0 +1,84 @@
+<div class="card-productivity" id="backward-tool">
+    <h3>Backward Engineering Tool</h3>
+    <p class="lead">Start with the target date, map the milestones, and schedule working sessions backward from the finish line.</p>
+
+    <form class="backward-form" id="backward-form">
+        <label>Outcome
+            <input type="text" name="outcome" placeholder="Ship v2 marketing site">
+        </label>
+        <label>Target date
+            <input type="date" name="target">
+        </label>
+        <label>Number of milestones
+            <input type="number" name="steps" min="1" max="12" value="4">
+        </label>
+        <label>Working cadence (per week)
+            <input type="number" name="cadence" min="1" max="7" value="3">
+        </label>
+        <button type="button" class="btn-pill primary" id="backward-generate">Generate plan</button>
+    </form>
+
+    <div class="results-box" id="backward-results">
+        Enter an outcome and target date to view a milestone schedule.
+    </div>
+
+    <div class="card-productivity" style="background: rgba(255,255,255,0.03);">
+        <h3>Reference goals</h3>
+        {% if backward_engineering_samples %}
+            <ul class="timeline">
+                {% for sample in backward_engineering_samples %}
+                    <li>
+                        <strong>{{ sample.goal }}</strong>
+                        {% if sample.target_date %}Target {{ sample.target_date|date:"M d, Y" }}{% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="empty-state">Add yearly goals to unlock reference plans.</p>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+(function() {
+    const container = document.getElementById("backward-tool");
+    if (!container) return;
+
+    const form = container.querySelector("#backward-form");
+    const results = container.querySelector("#backward-results");
+
+    function renderPlan(data) {
+        const { outcome, target, steps, cadence } = data;
+        if (!outcome || !target) {
+            results.textContent = "Please provide an outcome and target date.";
+            return;
+        }
+        const targetDate = new Date(target);
+        const today = new Date();
+        const totalDays = Math.max(1, Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24)));
+        const interval = Math.max(1, Math.floor(totalDays / steps));
+
+        let html = `<strong>${outcome}</strong><br>`;
+        html += `<span>${steps} milestones • ${cadence} work sessions per week</span><br><br>`;
+        html += "<ol>";
+        for (let i = steps; i >= 1; i--) {
+            const milestoneDate = new Date(targetDate);
+            milestoneDate.setDate(milestoneDate.getDate() - interval * (steps - i));
+            html += `<li><strong>Milestone ${i}</strong> — ${milestoneDate.toLocaleDateString()} : Draft deliverable / review with stakeholders</li>`;
+        }
+        html += "</ol>";
+        html += `<p>Schedule ${cadence} deep-work sessions each week leading to ${targetDate.toLocaleDateString()}.</p>`;
+        results.innerHTML = html;
+    }
+
+    container.querySelector("#backward-generate").addEventListener("click", () => {
+        const data = {
+            outcome: form.outcome.value.trim(),
+            target: form.target.value,
+            steps: parseInt(form.steps.value, 10) || 4,
+            cadence: parseInt(form.cadence.value, 10) || 3,
+        };
+        renderPlan(data);
+    });
+})();
+</script>

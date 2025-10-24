@@ -1,0 +1,115 @@
+<div class="card-productivity" id="blocking-app">
+    <h3>Blocking Apps & Websites</h3>
+    <p class="lead">Define the apps, sites, and patterns that derail focus. Pair this list with OS-level blockers (Screen Time, Focus Modes, Freedom, etc.).</p>
+
+    <div class="grid-columns two">
+        <div>
+            <form class="backward-form" id="blocking-form">
+                <label>Name / URL to block
+                    <input type="text" name="title" placeholder="e.g., instagram.com or Slack">
+                </label>
+                <label>Type
+                    <select name="kind">
+                        <option value="website">Website</option>
+                        <option value="app">App</option>
+                        <option value="keyword">Keyword</option>
+                    </select>
+                </label>
+                <label>Reason
+                    <textarea name="reason" rows="3" placeholder="Why does this need to be blocked?"></textarea>
+                </label>
+                <button type="submit" class="btn-pill primary">Add to blocklist</button>
+            </form>
+        </div>
+        <div>
+            <div class="card-productivity" style="background: rgba(255,255,255,0.03);">
+                <h3>Recommended integrations</h3>
+                <ul class="timeline">
+                    <li><strong>macOS / iOS</strong> – Use Focus Modes + Screen Time custom apps & URLs.</li>
+                    <li><strong>Windows</strong> – Leverage Focus Assist or third-party apps (Cold Turkey, Freedom).</li>
+                    <li><strong>Chrome / Brave</strong> – Install BlockSite or LeechBlock and import the list below.</li>
+                    <li><strong>Android</strong> – Use Digital Wellbeing to block apps during Pomodoro focus slots.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card-productivity" style="background: rgba(255,255,255,0.02);">
+        <h3>Your blocklist</h3>
+        <p class="lead">Toggle entries on/off as seasons change. The data lives in your browser (local storage).</p>
+        <ul class="blocked-list" id="blocked-list"></ul>
+    </div>
+</div>
+
+<script>
+(function() {
+    const app = document.getElementById("blocking-app");
+    if (!app) return;
+
+    const STORAGE_KEY = "improve:blocking";
+    const form = app.querySelector("#blocking-form");
+    const list = app.querySelector("#blocked-list");
+
+    let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+
+    function render() {
+        list.innerHTML = "";
+        if (!items.length) {
+            const li = document.createElement("li");
+            li.className = "blocked-item";
+            li.innerHTML = '<span class="empty-state">No entries yet. Add your biggest distractions.</span>';
+            list.appendChild(li);
+            return;
+        }
+        items.forEach((item, index) => {
+            const li = document.createElement("li");
+            li.className = "blocked-item";
+            const status = item.enabled ? "Active" : "Paused";
+            li.innerHTML = `
+                <span><strong>${item.title}</strong> • ${item.kind} <br><small>${item.reason || "No reason provided"}</small></span>
+                <div class="actions-inline">
+                    <button data-action="toggle" data-index="${index}">${status}</button>
+                    <button data-action="remove" data-index="${index}">Remove</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+    }
+
+    function save() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        render();
+    }
+
+    list.addEventListener("click", (event) => {
+        const button = event.target.closest("button");
+        if (!button) return;
+        const index = parseInt(button.dataset.index, 10);
+        const action = button.dataset.action;
+        if (action === "toggle") {
+            items[index].enabled = !items[index].enabled;
+        }
+        if (action === "remove") {
+            items.splice(index, 1);
+        }
+        save();
+    });
+
+    form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const data = new FormData(form);
+        const title = (data.get("title") || "").trim();
+        if (!title) return;
+        items.unshift({
+            title,
+            kind: data.get("kind"),
+            reason: (data.get("reason") || "").trim(),
+            enabled: true,
+        });
+        form.reset();
+        save();
+    });
+
+    render();
+})();
+</script>

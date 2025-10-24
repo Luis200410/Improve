@@ -1,0 +1,230 @@
+<section class="card body-card body-detail body-meal-library">
+    <style>
+        .body-meal-library {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .body-meal-header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+        .body-meal-metrics {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            font-size: 0.85rem;
+            color: var(--fg-muted);
+        }
+        .body-meal-metrics span {
+            padding: 0.35rem 0.6rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .meal-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        .meal-card {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 1rem;
+            padding: 1.1rem 1.3rem;
+            display: grid;
+            gap: 1rem;
+        }
+        @media (min-width: 1100px) {
+            .meal-card {
+                grid-template-columns: 1.6fr 1.4fr 1.2fr 1.2fr;
+                align-items: stretch;
+            }
+        }
+        .meal-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+        .meal-meta strong {
+            font-size: 1.05rem;
+            letter-spacing: 0.04em;
+        }
+        .meal-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+            color: var(--fg-muted);
+        }
+        .meal-tags span {
+            padding: 0.25rem 0.55rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .meal-macros {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            font-size: 0.9rem;
+        }
+        .meal-macros strong {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+        .meal-media {
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            align-items: flex-start;
+        }
+        .meal-media img {
+            width: 150px;
+            height: 100px;
+            border-radius: 0.75rem;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .meal-summary {
+            font-size: 0.9rem;
+            color: var(--fg-muted);
+            line-height: 1.6;
+        }
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.5rem 0.85rem;
+            border-radius: 0.6rem;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--bg-base);
+            text-decoration: none;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .btn-primary:hover {
+            border-color: rgba(255, 255, 255, 0.35);
+        }
+        .meal-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        .meal-pagination a,
+        .meal-pagination span {
+            padding: 0.4rem 0.75rem;
+            border-radius: 0.6rem;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            text-decoration: none;
+            color: var(--fg-muted);
+            font-size: 0.85rem;
+        }
+        .meal-pagination .active {
+            color: var(--fg-primary);
+            border-color: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .meal-pagination .disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+    </style>
+
+    <div class="body-meal-header">
+        <div>
+            <h3>Meal Library</h3>
+            <p class="lead">Catalog meals with macro breakdowns so your nutrition plans stay consistent and intentional.</p>
+        </div>
+        <div class="body-meal-metrics">
+            <span>{{ body_meal_count }} total recipes</span>
+            {% if body_meals_page %}
+                <span>Page {{ body_meals_page.number }} of {{ body_meals_page.paginator.num_pages }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if body_meals_page and body_meals_page.object_list %}
+        <div class="meal-grid">
+            {% for meal in body_meals_page %}
+                <article class="meal-card">
+                    <div class="meal-meta">
+                        <strong>{{ meal.name }}</strong>
+                        <div class="meal-tags">
+                            <span>{{ meal.category.name }}</span>
+                            <span>{% if meal.calories %}{{ meal.calories|floatformat:0 }} kcal{% else %}No calories{% endif %}</span>
+                            <span>{{ meal.servings }} serving{% if meal.servings|default:1 != 1 %}s{% endif %}</span>
+                            {% if meal.prep_time_minutes %}<span>{{ meal.prep_time_minutes }} min</span>{% endif %}
+                        </div>
+                        <div class="meal-summary">{{ meal.summary|default:"No summary yet." }}</div>
+                    </div>
+                    <div class="meal-macros">
+                        <div>
+                            <strong>Protein</strong>
+                            <p>{% if meal.protein %}{{ meal.protein|floatformat:0 }} g{% else %}0 g{% endif %}</p>
+                        </div>
+                        <div>
+                            <strong>Carbohydrates</strong>
+                            <p>{% if meal.carbohydrates %}{{ meal.carbohydrates|floatformat:0 }} g{% else %}0 g{% endif %}</p>
+                        </div>
+                        <div>
+                            <strong>Fats</strong>
+                            <p>{% if meal.fats %}{{ meal.fats|floatformat:0 }} g{% else %}0 g{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="meal-media">
+                        {% if meal.image_url %}
+                            <a href="{{ meal.image_url }}" target="_blank" rel="noopener">
+                                <img src="{{ meal.image_url }}" alt="{{ meal.name }} image">
+                            </a>
+                        {% endif %}
+                        {% if meal.recipe_url %}
+                            <a class="btn-primary" href="{{ meal.recipe_url }}" target="_blank" rel="noopener">View recipe</a>
+                        {% endif %}
+                        {% if not meal.image_url and not meal.recipe_url %}
+                            <span class="empty-state">No media yet</span>
+                        {% endif %}
+                    </div>
+                    <div class="meal-summary">
+                        {{ meal.instructions|linebreaksbr }}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+
+        {% if body_meals_pagination %}
+            <nav class="meal-pagination">
+                {% if body_meals_page.has_previous %}
+                    <a href="?app=body&body_view=meals&page={{ body_meals_page.previous_page_number }}">Prev</a>
+                {% else %}
+                    <span class="disabled">Prev</span>
+                {% endif %}
+
+                {% for marker in body_meals_pagination %}
+                    {% if marker %}
+                        {% if marker == body_meals_page.number %}
+                            <span class="active">{{ marker }}</span>
+                        {% else %}
+                            <a href="?app=body&body_view=meals&page={{ marker }}">{{ marker }}</a>
+                        {% endif %}
+                    {% else %}
+                        <span>…</span>
+                    {% endif %}
+                {% endfor %}
+
+                {% if body_meals_page.has_next %}
+                    <a href="?app=body&body_view=meals&page={{ body_meals_page.next_page_number }}">Next</a>
+                {% else %}
+                    <span class="disabled">Next</span>
+                {% endif %}
+            </nav>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">No meals documented yet. Add your staple recipes to the Body system to unlock planning.</p>
+    {% endif %}
+</section>

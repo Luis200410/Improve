@@ -162,9 +162,33 @@
         padding: 1.25rem 1.35rem;
         background: rgba(255, 255, 255, 0.04);
     }
+    .card.card-summary {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        transition: border 0.2s ease, transform 0.2s ease;
+    }
+    .card.card-summary:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+    }
     .card h3 {
         margin-top: 0;
         margin-bottom: 0.8rem;
+    }
+    .card a.dashboard-link {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        text-decoration: none;
+        color: inherit;
+        padding: 0.4rem 0.5rem;
+        border-radius: 0.55rem;
+        transition: background 0.2s ease, border 0.2s ease;
+    }
+    .card a.dashboard-link:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.16);
     }
     .empty-state {
         font-style: italic;
@@ -263,7 +287,7 @@
         <p class="sidebar__hint">
             Each arena becomes a full microapp. Explore, then wire custom workflows inside the new folders.
         </p>
-        <p class="sidebar__footer"><a href="{% url 'admin:index' %}">Open admin</a> to seed data.</p>
+        <p class="sidebar__footer">Manage each system from its dedicated dashboard.</p>
     </aside>
     <div class="workspace">
         <header class="workspace__header">
@@ -293,46 +317,51 @@
                 {% if active_dashboard_template %}
                     {% include active_dashboard_template with microapp=active_microapp_data %}
                 {% endif %}
-                <section class="card">
+                <a class="card card-summary" href="?app=productivity">
                     <h3>Top Tasks</h3>
                     {% if tasks %}
                         <ul class="list-clean">
                             {% for task in tasks %}
                                 <li>
-                                    {% if task.completed %}[x]{% else %}[ ]{% endif %}
-                                    {{ task.title }}
-                                    {% if task.due_date %}<small>(due {{ task.due_date }})</small>{% endif %}
+                                    <span>{% if task.completed %}[x]{% else %}[ ]{% endif %} {{ task.title }}</span>
+                                    {% if task.due_date %}<small>Due {{ task.due_date|date:"M d, Y" }}</small>{% endif %}
                                 </li>
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="empty-state">You are all caught up. Add tasks in the admin panel.</p>
+                        <p class="empty-state">You are all caught up. Add tasks to stay ahead.</p>
                     {% endif %}
-                </section>
-                <section class="card">
+                </a>
+                <a class="card card-summary" href="?app=productivity">
                     <h3>Active Habits</h3>
                     {% if habits %}
                         <ul class="list-clean">
                             {% for habit in habits %}
-                                <li>{{ habit.name }} — {{ habit.get_frequency_display }} • target: {{ habit.target_per_period }}</li>
+                                <li>
+                                    <span>{{ habit.name }}</span>
+                                    <small>{{ habit.get_frequency_display }} • target {{ habit.target_per_period }}</small>
+                                </li>
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="empty-state">Set up habits in the admin to build daily momentum.</p>
+                        <p class="empty-state">Set up habits to build daily momentum.</p>
                     {% endif %}
-                </section>
-                <section class="card">
+                </a>
+                <a class="card card-summary" href="?app=mind-emotions">
                     <h3>Recent Reflections</h3>
                     {% if reflections %}
                         <ul class="list-clean">
                             {% for reflection in reflections %}
-                                <li>{{ reflection.created_at|date:"M d, Y" }} — {{ reflection.get_cadence_display }}</li>
+                                <li>
+                                    <span>{{ reflection.created_at|date:"M d, Y" }}</span>
+                                    <small>{{ reflection.get_cadence_display }}</small>
+                                </li>
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="empty-state">Capture your insights with a reflection entry.</p>
+                        <p class="empty-state">Capture today’s insights once you wrap up work.</p>
                     {% endif %}
-                </section>
+                </a>
             </div>
         {% endif %}
     </div>
@@ -347,7 +376,7 @@
             {% endif %}
         </div>
         <div class="settings-dialog__actions">
-            <a class="btn" href="{% url 'admin:index' %}">Open Admin</a>
+            <button type="button" class="btn" data-close-settings>Close</button>
         </div>
     </div>
 </div>
@@ -359,7 +388,7 @@
             return;
         }
         const openers = document.querySelectorAll("[data-open-settings]");
-        const closeBtn = modal.querySelector("[data-close-settings]");
+        const closeButtons = modal.querySelectorAll("[data-close-settings]");
 
         const openModal = () => {
             modal.classList.add("is-open");
@@ -375,12 +404,12 @@
             });
         });
 
-        if (closeBtn) {
-            closeBtn.addEventListener("click", (event) => {
+        closeButtons.forEach((btn) => {
+            btn.addEventListener("click", (event) => {
                 event.preventDefault();
                 closeModal();
             });
-        }
+        });
 
         modal.addEventListener("click", (event) => {
             if (event.target === modal) {

@@ -1,0 +1,28 @@
+<div class="card-productivity">
+    <h3>Big 4 Goals</h3>
+    <p class="lead">The annual pillars that drive everything else. Review progress, define next moves.</p>
+
+    {% if big_four_goals %}
+        <div class="grid-columns two">
+            {% for goal in big_four_goals %}
+                <article class="card-productivity" style="background: rgba(255,255,255,0.03);">
+                    <header>
+                        <h3>{{ goal.title }}</h3>
+                        <div class="metric-chip">Start {{ goal.start_date|date:"M d, Y" }}</div>
+                        {% if goal.target_date %}<div class="metric-chip">Target {{ goal.target_date|date:"M d, Y" }}</div>{% endif %}
+                    </header>
+                    {% if goal.description %}<p class="lead">{{ goal.description }}</p>{% endif %}
+                    {% if goal.success_criteria %}
+                        <div class="results-box">
+                            <strong>Success criteria</strong><br>
+                            {{ goal.success_criteria|linebreaksbr }}
+                        </div>
+                    {% endif %}
+                    <a class="btn-pill" href="?app=second-brain">Link to knowledge →</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No goals captured. Define your yearly Big 4 and watch them surface across the Productivity OS.</p>
+    {% endif %}
+</div>

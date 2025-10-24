@@ -1,20 +1,16 @@
-<header>
-    <h2 id="system-settings-title">{{ microapp.label }} · System Setup</h2>
-    <p>Define the cadence of planning, prioritizing, and reviewing so execution stays frictionless.</p>
-</header>
-{% if microapp.microcategories %}
-    <h3>Structure the workflow</h3>
-    <ul>
-        {% for item in microapp.microcategories %}
-            <li>{{ item }}</li>
-        {% endfor %}
+<section class="card-productivity">
+    <h3>Productivity System Setup</h3>
+    <p class="lead">Activate the execution stack that keeps you focused: timers, reviews, blocking rules, and timeboxing tools.</p>
+
+    <ul class="timeline">
+        <li><strong>Pomodoro Timer</strong> — set your preferred focus/break cadence and save defaults.</li>
+        <li><strong>Blocking apps & sites</strong> — maintain a list of distractions to import into system-level blockers.</li>
+        <li><strong>Weekly & Monthly Reviews</strong> — schedule recurring deep-dives to keep lessons and wins front of mind.</li>
+        <li><strong>Big 4 Goals</strong> — flag the annual goals that matter most so they surface inside every review.</li>
+        <li><strong>Habit Tracking</strong> — sync Body + Productivity habits and track completions each day.</li>
+        <li><strong>Backward Engineering Tool</strong> — map target dates into milestones and work sessions.</li>
+        <li><strong>Parkinson Law Tool</strong> — timebox tasks aggressively to prevent scope creep.</li>
     </ul>
-{% endif %}
-{% if microapp.setup_prompts %}
-    <h3>Activation checklist</h3>
-    <ul>
-        {% for step in microapp.setup_prompts %}
-            <li>{{ step }}</li>
-        {% endfor %}
-    </ul>
-{% endif %}
+
+    <p class="lead">Everything you capture inside these dashboards lives locally until you sync with your knowledge or task system. The intent: fast capture, zero friction, relentless follow-through.</p>
+</section>

@@ -1,11 +1,17 @@
 from datetime import timedelta
 
+import json
+
 from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.shortcuts import redirect, render
+from django.core.paginator import Paginator
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views import View
+from django.views.decorators.http import require_GET, require_POST
 from django.views.generic import TemplateView
 
 from . import models
@@ -176,12 +182,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         },
     ]
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        user = self.request.user
-        microapps = self.default_microapps
+    @classmethod
+    def build_dashboard_context(cls, request):
+        user = request.user
+        microapps = cls.default_microapps
 
-        active_slug = self.request.GET.get("app") or microapps[0]["slug"]
+        active_slug = request.GET.get("app") or microapps[0]["slug"]
         active_microapp = next(
             (microapp for microapp in microapps if microapp["slug"] == active_slug), microapps[0]
         )
@@ -197,7 +203,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             or models.Habit.objects.filter(area__owner=user).exists()
             or models.Reflection.objects.filter(owner=user).exists()
         )
-        open_settings = self.request.GET.get("mode") == "settings"
+        open_settings = request.GET.get("mode") == "settings"
 
         dashboard_url = reverse("personal_management:dashboard")
         sidebar_items = []
@@ -227,39 +233,204 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             models.Reflection.objects.filter(owner=user).order_by("-created_at").first()
         )
 
-        context["microapps"] = microapps
-        context["sidebar_items"] = sidebar_items
-        context["active_microapp"] = active_microapp["slug"]
-        context["active_microapp_label"] = active_microapp["label"]
-        context["active_microapp_description"] = active_microapp["description"]
-        context["active_microapp_tagline"] = active_microapp.get("tagline", "")
-        context["active_microapp_data"] = active_microapp
-        context["active_microapp_microcategories"] = active_microapp.get("microcategories", [])
-        context["active_microapp_setup_steps"] = active_microapp.get("setup_prompts", [])
-        context["show_setup_modal"] = (open_settings or not has_existing_data) and (
-            active_microapp["slug"] != "today"
-        )
-        context["first_time_onboarding"] = (
-            not has_existing_data and active_microapp["slug"] != "today"
-        )
-        context["active_dashboard_template"] = active_microapp.get(
-            "dashboard_template", "personal_management/systems/second-brain/dashboard.html"
-        )
-        context["active_settings_template"] = active_microapp.get(
-            "settings_template", "personal_management/systems/second-brain/settings.html"
-        )
-        context["active_microapp_slug"] = active_microapp["slug"]
-        context["tasks"] = models.Task.objects.filter(owner=user, completed=False)[:10]
-        context["reflections"] = models.Reflection.objects.filter(owner=user)[:5]
-        context["habits"] = models.Habit.objects.filter(area__owner=user, active=True)
-        context["life_areas"] = life_areas
-        context["today_date"] = today
-        context["tasks_today"] = tasks_today
-        context["tasks_overdue"] = tasks_overdue
-        context["tasks_upcoming"] = tasks_upcoming
-        context["active_habits"] = active_habits
-        context["latest_reflection"] = latest_reflection
+        body_view = "overview"
+        body_context = {
+            "body_view": body_view,
+            "body_today_sessions": [],
+            "body_today_exercises": [],
+            "body_today_meals": [],
+            "body_next_session": None,
+            "body_exercise_count": 0,
+            "body_meal_count": 0,
+            "body_session_count": 0,
+            "body_exercises_page": None,
+            "body_exercises_pagination": [],
+            "body_meals_page": None,
+            "body_meals_pagination": [],
+            "body_sessions_full": None,
+        }
+
+        productivity_view = "overview"
+        productivity_context = {
+            "productivity_view": productivity_view,
+            "pomodoro_defaults": {
+                "focus_minutes": 25,
+                "short_break_minutes": 5,
+                "long_break_minutes": 15,
+                "cycles_before_long_break": 4,
+            },
+            "weekly_reviews": [],
+            "monthly_reviews": [],
+            "big_four_goals": [],
+            "productivity_habits": [],
+            "backward_engineering_samples": [],
+            "parkinson_prompts": [
+                "What is the absolute latest this can be delivered?",
+                "How can I compress the scope without sacrificing the outcome?",
+                "What support do I need to hit an earlier deadline?",
+            ],
+        }
+
+        if active_microapp["slug"] == "body":
+            body_view = request.GET.get("body_view", "overview")
+            exercises_qs = models.Exercise.objects.select_related("category").order_by("name")
+            meals_qs = models.Meal.objects.select_related("category").order_by("name")
+            sessions_qs = (
+                models.WorkoutSession.objects.filter(owner=user)
+                .prefetch_related("session_exercises__exercise")
+                .order_by("-scheduled_for", "-updated_at")
+            )
+
+            sessions_list = list(sessions_qs)
+            today_sessions = [s for s in sessions_list if s.scheduled_for == today]
+            next_session = None
+            if not today_sessions:
+                next_session = next(
+                    (
+                        s
+                        for s in sessions_list
+                        if s.scheduled_for and s.scheduled_for >= today
+                    ),
+                    None,
+                )
+                if next_session is None and sessions_list:
+                    next_session = sessions_list[0]
+
+            seen_exercise_ids: set[int] = set()
+            today_exercises: list[models.Exercise] = []
+            for session in today_sessions:
+                for section in session.session_exercises.all():
+                    if section.exercise_id not in seen_exercise_ids:
+                        seen_exercise_ids.add(section.exercise_id)
+                        today_exercises.append(section.exercise)
+
+            meals_for_today: list[models.Meal] = []
+            if today_sessions:
+                meals_for_today = list(meals_qs[:3])
+            else:
+                meals_for_today = list(meals_qs[:3])
+
+            body_context.update(
+                {
+                    "body_view": body_view,
+                    "body_today_sessions": today_sessions,
+                    "body_today_exercises": today_exercises,
+                    "body_today_meals": meals_for_today,
+                    "body_next_session": next_session,
+                    "body_exercise_count": exercises_qs.count(),
+                    "body_meal_count": meals_qs.count(),
+                    "body_session_count": len(sessions_list),
+                }
+            )
+
+            if body_view == "exercises":
+                page_number = request.GET.get("page", 1)
+                paginator = Paginator(exercises_qs, 50)
+                page_obj = paginator.get_page(page_number)
+                body_context["body_exercises_page"] = page_obj
+                body_context["body_exercises_pagination"] = DashboardView.pagination_window(page_obj)
+            elif body_view == "meals":
+                page_number = request.GET.get("page", 1)
+                paginator = Paginator(meals_qs, 50)
+                page_obj = paginator.get_page(page_number)
+                body_context["body_meals_page"] = page_obj
+                body_context["body_meals_pagination"] = DashboardView.pagination_window(page_obj)
+            elif body_view == "sessions":
+                body_context["body_sessions_full"] = sessions_list
+
+        if active_microapp["slug"] == "productivity":
+            productivity_view = request.GET.get("productivity_view", "overview")
+            weekly_reviews = list(
+                models.Reflection.objects.filter(owner=user, cadence=models.Reflection.WEEKLY)
+                .order_by("-created_at")
+            )
+            monthly_reviews = list(
+                models.Reflection.objects.filter(owner=user, cadence=models.Reflection.MONTHLY)
+                .order_by("-created_at")
+            )
+            big_goals = list(
+                models.Goal.objects.filter(area__owner=user)
+                .order_by("target_date", "-start_date")[:4]
+            )
+            productivity_context.update(
+                {
+                    "productivity_view": productivity_view,
+                    "weekly_reviews": weekly_reviews,
+                    "monthly_reviews": monthly_reviews,
+                    "big_four_goals": big_goals,
+                    "productivity_habits": list(
+                        models.Habit.objects.filter(area__owner=user)
+                        .order_by("name")[:50]
+                    ),
+                    "backward_engineering_samples": [
+                        {
+                            "goal": goal.title,
+                            "target_date": goal.target_date,
+                            "start_date": goal.start_date,
+                        }
+                        for goal in big_goals
+                    ],
+                }
+            )
+
+        context = {
+            "microapps": microapps,
+            "sidebar_items": sidebar_items,
+            "active_microapp": active_microapp["slug"],
+            "active_microapp_label": active_microapp["label"],
+            "active_microapp_description": active_microapp["description"],
+            "active_microapp_tagline": active_microapp.get("tagline", ""),
+            "active_microapp_data": active_microapp,
+            "active_microapp_microcategories": active_microapp.get("microcategories", []),
+            "active_microapp_setup_steps": active_microapp.get("setup_prompts", []),
+            "show_setup_modal": (open_settings or not has_existing_data)
+            and (active_microapp["slug"] != "today"),
+            "first_time_onboarding": not has_existing_data and active_microapp["slug"] != "today",
+            "active_dashboard_template": active_microapp.get(
+                "dashboard_template", "personal_management/systems/second-brain/dashboard.html"
+            ),
+            "active_settings_template": active_microapp.get(
+                "settings_template", "personal_management/systems/second-brain/settings.html"
+            ),
+            "active_microapp_slug": active_microapp["slug"],
+            "tasks": models.Task.objects.filter(owner=user, completed=False)[:10],
+            "reflections": models.Reflection.objects.filter(owner=user)[:5],
+            "habits": models.Habit.objects.filter(area__owner=user, active=True),
+            "life_areas": life_areas,
+            "today_date": today,
+            "tasks_today": tasks_today,
+            "tasks_overdue": tasks_overdue,
+            "tasks_upcoming": tasks_upcoming,
+            "active_habits": active_habits,
+            "latest_reflection": latest_reflection,
+        }
+
+        context.update(body_context)
+        context.update(productivity_context)
         return context
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(self.build_dashboard_context(self.request))
+        return context
+
+    @staticmethod
+    def pagination_window(page_obj, *, boundary=2, radius=1):
+        pages = []
+        total = page_obj.paginator.num_pages
+        current = page_obj.number
+        last = None
+        for number in range(1, total + 1):
+            in_boundary = number <= boundary or number > total - boundary
+            near_current = abs(number - current) <= radius
+            if in_boundary or near_current:
+                pages.append(number)
+                last = number
+            else:
+                if last is not None:
+                    pages.append(None)
+                    last = None
+        return pages
 
 
 class HomeView(View):
@@ -278,3 +449,137 @@ def logout_view(request):
 def today_redirect(request):
     dashboard_url = reverse("personal_management:dashboard")
     return redirect(f"{dashboard_url}?app=today")
+
+
+def get_pomodoro_profile(user):
+    profile, _ = models.PomodoroProfile.objects.get_or_create(user=user)
+    return profile
+
+
+def _forest_payload(profile: models.PomodoroProfile) -> list[dict]:
+    trees = []
+    for tree in profile.forest.order_by("-planted_at")[:18]:
+        trees.append(
+            {
+                "tree_type": tree.tree_type,
+                "focus_minutes": tree.focus_minutes,
+                "planted_at": timezone.localtime(tree.planted_at).strftime("%b %d"),
+            }
+        )
+    return trees
+
+
+def _pomodoro_summary_payload(profile: models.PomodoroProfile) -> dict:
+    return {
+        "profile": profile.to_summary(),
+        "forest": _forest_payload(profile),
+    }
+
+
+@login_required
+@require_GET
+def pomodoro_summary(request):
+    profile = get_pomodoro_profile(request.user)
+    payload = _pomodoro_summary_payload(profile)
+    active_session = (
+        profile.sessions.filter(status=models.PomodoroSession.RUNNING).order_by("-started_at").first()
+    )
+    if active_session:
+        payload["active_session"] = {
+            "id": active_session.id,
+            "focus_minutes": active_session.focus_minutes,
+            "current_cycle": active_session.current_cycle,
+            "started_at": active_session.started_at.isoformat(),
+            "elapsed_seconds": active_session.elapsed_seconds,
+        }
+    else:
+        payload["active_session"] = None
+    return JsonResponse(payload)
+
+
+@login_required
+@require_POST
+def pomodoro_start(request):
+    try:
+        data = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON payload")
+
+    focus_minutes = max(1, int(data.get("focus_minutes", 25)))
+    short_break = max(1, int(data.get("short_break_minutes", 5)))
+    long_break = max(1, int(data.get("long_break_minutes", 15)))
+    cycles = max(1, int(data.get("cycles_before_long_break", 4)))
+
+    profile = get_pomodoro_profile(request.user)
+    profile.sessions.filter(status=models.PomodoroSession.RUNNING).update(status=models.PomodoroSession.CANCELLED)
+
+    session = models.PomodoroSession.objects.create(
+        profile=profile,
+        focus_minutes=focus_minutes,
+        short_break_minutes=short_break,
+        long_break_minutes=long_break,
+        cycles_before_long_break=cycles,
+    )
+
+    return JsonResponse({"session": session.to_dict()})
+
+
+@login_required
+@require_POST
+def pomodoro_complete(request):
+    try:
+        data = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON payload")
+
+    session_id = data.get("session_id")
+    if not session_id:
+        return HttpResponseBadRequest("session_id is required")
+
+    session = get_object_or_404(
+        models.PomodoroSession,
+        pk=session_id,
+        profile__user=request.user,
+    )
+
+    if session.status != models.PomodoroSession.RUNNING:
+        return HttpResponseBadRequest("Session is not running")
+
+    completed_minutes = max(1, int(data.get("completed_minutes", session.focus_minutes)))
+    profile = session.profile
+    xp_gained, tree_type = profile.add_focus_minutes(completed_minutes)
+    session.status = models.PomodoroSession.COMPLETED
+    session.completed_focus_minutes = completed_minutes
+    session.tree_type = tree_type
+    session.save(update_fields=["status", "completed_focus_minutes", "tree_type", "updated_at"])
+    models.PomodoroTree.objects.create(
+        profile=profile,
+        tree_type=tree_type,
+        focus_minutes=completed_minutes,
+    )
+    payload = _pomodoro_summary_payload(profile)
+    payload["xp_gained"] = xp_gained
+    payload["tree_type"] = tree_type
+    return JsonResponse({"summary": payload})
+
+
+@login_required
+@require_POST
+def pomodoro_cancel(request):
+    try:
+        data = json.loads(request.body or "{}")
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON payload")
+
+    session_id = data.get("session_id")
+    if not session_id:
+        return HttpResponseBadRequest("session_id is required")
+
+    session = get_object_or_404(
+        models.PomodoroSession,
+        pk=session_id,
+        profile__user=request.user,
+    )
+    session.status = models.PomodoroSession.CANCELLED
+    session.save(update_fields=["status", "updated_at"])
+    return JsonResponse({"ok": True})

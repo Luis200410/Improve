@@ -1,0 +1,77 @@
+<div class="card-productivity" id="parkinson-tool">
+    <h3>Parkinson Law Timebox</h3>
+    <p class="lead">Give the task less time than it thinks it deserves. Collapse the timeline and move fast.</p>
+
+    <form class="parkinson-tool" id="parkinson-form">
+        <label>Task / Outcome
+            <input type="text" name="task" placeholder="Prepare Q4 strategy deck">
+        </label>
+        <label>Default duration (hours)
+            <input type="number" name="default" min="1" max="40" value="8">
+        </label>
+        <label>Challenge factor
+            <select name="factor">
+                <option value="0.5">Cut in half (50%)</option>
+                <option value="0.33">One third (33%)</option>
+                <option value="0.25">Sprint (25%)</option>
+            </select>
+        </label>
+        <label>Hard deadline
+            <input type="datetime-local" name="deadline">
+        </label>
+        <button type="button" class="btn-pill primary" id="parkinson-generate">Timebox it</button>
+    </form>
+
+    <div class="results-box" id="parkinson-results">
+        Populate the form to generate a compressed timebox and suggested checkpoints.
+    </div>
+
+    <div class="card-productivity" style="background: rgba(255,255,255,0.03);">
+        <h3>Prompts</h3>
+        <ul class="timeline">
+            {% for prompt in parkinson_prompts %}
+                <li>{{ prompt }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+(function() {
+    const container = document.getElementById("parkinson-tool");
+    if (!container) return;
+
+    const form = container.querySelector("#parkinson-form");
+    const results = container.querySelector("#parkinson-results");
+
+    container.querySelector("#parkinson-generate").addEventListener("click", () => {
+        const task = form.task.value.trim();
+        const defaultHours = parseFloat(form.default.value) || 1;
+        const factor = parseFloat(form.factor.value) || 0.5;
+        const deadline = form.deadline.value ? new Date(form.deadline.value) : null;
+
+        if (!task) {
+            results.textContent = "Describe the task to timebox it.";
+            return;
+        }
+
+        const compressedHours = Math.max(0.5, defaultHours * factor);
+        const checkpoints = [0.25, 0.5, 0.75];
+        let html = `<strong>${task}</strong><br>`;
+        html += `<p>Default time: ${defaultHours}h → Challenge time: <strong>${compressedHours.toFixed(1)}h</strong></p>`;
+        html += "<ol>";
+        checkpoints.forEach((ratio, index) => {
+            const label = ["Kickoff", "Midpoint", "Polish"][index] || "Checkpoint";
+            html += `<li><strong>${label}</strong> — have ${Math.round(ratio * 100)}% done by ${(compressedHours * ratio).toFixed(1)}h.</li>`;
+        });
+        html += "</ol>";
+        if (deadline) {
+            const start = new Date(deadline.getTime() - compressedHours * 60 * 60 * 1000);
+            html += `<p>Start no later than <strong>${start.toLocaleString()}</strong> to deliver by ${deadline.toLocaleString()}.</p>`;
+        } else {
+            html += `<p>Block ${compressedHours.toFixed(1)} hours on your calendar this week.</p>`;
+        }
+        results.innerHTML = html;
+    });
+})();
+</script>

@@ -88,15 +88,17 @@
             <ul class="list-clean">
                 {% for task in tasks_today %}
                     <li class="task-item">
-                        <div class="task-item__title">
-                            <span>[ ]</span>
-                            <div>
-                                <div>{{ task.title }}</div>
-                                {% if task.goal %}
-                                    <small>Goal: {{ task.goal.title }}</small>
-                                {% endif %}
+                        <a class="dashboard-link" href="?app=productivity">
+                            <div class="task-item__title">
+                                <span>[ ]</span>
+                                <div>
+                                    <div>{{ task.title }}</div>
+                                    {% if task.goal %}
+                                        <small>Goal: {{ task.goal.title }}</small>
+                                    {% endif %}
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     </li>
                 {% endfor %}
             </ul>
@@ -109,13 +111,15 @@
             <ul class="list-clean">
                 {% for task in tasks_overdue|slice:":3" %}
                     <li class="task-item">
-                        <div class="task-item__title">
-                            <span>[ ]</span>
-                            <div>
-                                <div>{{ task.title }}</div>
-                                <small>Due {{ task.due_date|date:"M j" }}</small>
+                        <a class="dashboard-link" href="?app=productivity">
+                            <div class="task-item__title">
+                                <span>[ ]</span>
+                                <div>
+                                    <div>{{ task.title }}</div>
+                                    <small>Due {{ task.due_date|date:"M j" }}</small>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     </li>
                 {% endfor %}
             </ul>
@@ -126,13 +130,15 @@
             <ul class="list-clean">
                 {% for task in tasks_upcoming|slice:":3" %}
                     <li class="task-item">
-                        <div class="task-item__title">
-                            <span>[ ]</span>
-                            <div>
-                                <div>{{ task.title }}</div>
-                                <small>Due {{ task.due_date|date:"D, M j" }}</small>
+                        <a class="dashboard-link" href="?app=productivity">
+                            <div class="task-item__title">
+                                <span>[ ]</span>
+                                <div>
+                                    <div>{{ task.title }}</div>
+                                    <small>Due {{ task.due_date|date:"D, M j" }}</small>
+                                </div>
                             </div>
-                        </div>
+                        </a>
                     </li>
                 {% endfor %}
             </ul>
@@ -145,8 +151,10 @@
             <ul class="list-clean habit-list">
                 {% for habit in active_habits|slice:":6" %}
                     <li>
-                        <span>{{ habit.name }}</span>
-                        <small>{{ habit.get_frequency_display }} • target {{ habit.target_per_period }}</small>
+                        <a class="dashboard-link" href="?app=productivity">
+                            <span>{{ habit.name }}</span>
+                            <small>{{ habit.get_frequency_display }} • target {{ habit.target_per_period }}</small>
+                        </a>
                     </li>
                 {% endfor %}
             </ul>
@@ -158,18 +166,20 @@
     <section class="card reflection-card">
         <h3>Recent Reflection</h3>
         {% if latest_reflection %}
-            <blockquote>
-                {% if latest_reflection.highlights %}
-                    <p><strong>Highlights:</strong> {{ latest_reflection.highlights }}</p>
-                {% endif %}
-                {% if latest_reflection.lessons %}
-                    <p><strong>Lessons:</strong> {{ latest_reflection.lessons }}</p>
-                {% endif %}
-                {% if latest_reflection.next_steps %}
-                    <p><strong>Next Steps:</strong> {{ latest_reflection.next_steps }}</p>
-                {% endif %}
-            </blockquote>
-            <small>Logged {{ latest_reflection.created_at|date:"F j, Y" }} • {{ latest_reflection.get_cadence_display }}</small>
+            <a class="dashboard-link" href="?app=mind-emotions">
+                <blockquote>
+                    {% if latest_reflection.highlights %}
+                        <p><strong>Highlights:</strong> {{ latest_reflection.highlights }}</p>
+                    {% endif %}
+                    {% if latest_reflection.lessons %}
+                        <p><strong>Lessons:</strong> {{ latest_reflection.lessons }}</p>
+                    {% endif %}
+                    {% if latest_reflection.next_steps %}
+                        <p><strong>Next Steps:</strong> {{ latest_reflection.next_steps }}</p>
+                    {% endif %}
+                </blockquote>
+                <small>Logged {{ latest_reflection.created_at|date:"F j, Y" }} • {{ latest_reflection.get_cadence_display }}</small>
+            </a>
         {% else %}
             <p class="empty-state">Capture today’s insights once you wrap up your work.</p>
         {% endif %}
@@ -181,8 +191,10 @@
             <div class="areas-grid">
                 {% for area in life_areas|slice:":6" %}
                     <article>
-                        <h3>{{ area.name }}</h3>
-                        <p>{{ area.description|default:"Set the intention for this arena inside its system setup." }}</p>
+                        <a class="dashboard-link" href="?app=body">
+                            <h3>{{ area.name }}</h3>
+                            <p>{{ area.description|default:"Set the intention for this arena inside its system setup." }}</p>
+                        </a>
                     </article>
                 {% endfor %}
             </div>

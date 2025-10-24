@@ -1,0 +1,466 @@
+<style>
+    #pomodoro-app {
+        display: grid;
+        gap: 1.5rem;
+    }
+    #pomodoro-app .timer-wrapper {
+        display: grid;
+        gap: 1.5rem;
+    }
+    @media (min-width: 1024px) {
+        #pomodoro-app .timer-wrapper {
+            grid-template-columns: 1.3fr 1fr;
+            align-items: stretch;
+        }
+    }
+    .timer-display {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 1rem;
+        padding: 1.6rem;
+        text-align: center;
+        background: radial-gradient(circle at top, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+    .timer-display span.mode {
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+    .timer-display h1 {
+        font-size: clamp(3rem, 6vw, 4.5rem);
+        margin: 0;
+    }
+    .focus-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    .config-card {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        display: grid;
+        gap: 1rem;
+    }
+    .config-card label {
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.7);
+        display: grid;
+        gap: 0.4rem;
+    }
+    .config-card input {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: var(--fg-primary);
+        border-radius: 0.65rem;
+        padding: 0.65rem 0.8rem;
+    }
+    .pomodoro-progress {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        display: grid;
+        gap: 1.2rem;
+    }
+    .pomodoro-progress .metrics {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .forest-grid {
+        display: grid;
+        gap: 0.75rem;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+    .forest-card {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 0.85rem;
+        padding: 0.8rem;
+        background: rgba(255, 255, 255, 0.02);
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .forest-card .emoji {
+        font-size: 2rem;
+    }
+    .progress-bar {
+        width: 100%;
+        height: 0.6rem;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.08);
+        overflow: hidden;
+    }
+    .progress-bar > span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(90deg, #7dd3fc, #60a5fa, #818cf8);
+    }
+    .btn-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 0.65rem;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: transparent;
+        color: var(--fg-primary);
+        text-decoration: none;
+        font-size: 0.85rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        cursor: pointer;
+    }
+    .btn-pill.primary {
+        background: rgba(255, 255, 255, 0.2);
+        color: var(--bg-base);
+        border-color: rgba(255, 255, 255, 0.25);
+    }
+</style>
+
+<section id="pomodoro-app">
+    <div class="timer-wrapper">
+        <div class="timer-display">
+            <span class="mode" id="pomodoro-mode">Focus</span>
+            <h1 id="pomodoro-time">25:00</h1>
+            <div class="metric-chip" id="pomodoro-cycle">Cycle 1</div>
+            <div class="focus-actions">
+                <button type="button" class="btn-pill primary" id="pomodoro-start">Start</button>
+                <button type="button" class="btn-pill" id="pomodoro-pause">Pause</button>
+                <button type="button" class="btn-pill" id="pomodoro-reset">Reset</button>
+            </div>
+        </div>
+        <div class="config-card">
+            <label>Focus minutes
+                <input type="number" name="focus" min="5" max="120" value="{{ pomodoro_defaults.focus_minutes }}">
+            </label>
+            <label>Short break minutes
+                <input type="number" name="short" min="2" max="30" value="{{ pomodoro_defaults.short_break_minutes }}">
+            </label>
+            <label>Long break minutes
+                <input type="number" name="long" min="5" max="45" value="{{ pomodoro_defaults.long_break_minutes }}">
+            </label>
+            <label>Cycles before long break
+                <input type="number" name="cycles" min="1" max="8" value="{{ pomodoro_defaults.cycles_before_long_break }}">
+            </label>
+            <button type="button" class="btn-pill primary" id="pomodoro-save">Save defaults</button>
+        </div>
+    </div>
+
+    <div class="pomodoro-progress">
+        <h3>Your Progress</h3>
+        <div class="metrics">
+            <div class="metric-chip">Level <span id="pomodoro-level">1</span></div>
+            <div class="metric-chip">XP <span id="pomodoro-xp">0</span>/<span id="pomodoro-next-xp">500</span></div>
+            <div class="metric-chip">Total focus <span id="pomodoro-total">0</span> min</div>
+            <div class="metric-chip">Streak <span id="pomodoro-streak">0</span> days</div>
+            <div class="metric-chip">Best streak <span id="pomodoro-best-streak">0</span> days</div>
+            <div class="metric-chip">Coins <span id="pomodoro-coins">0</span></div>
+        </div>
+        <div class="progress-bar"><span id="pomodoro-progress-bar" style="width:0%;"></span></div>
+        <div>
+            <h4 style="margin-bottom:0.6rem;">Forest</h4>
+            <div class="forest-grid" id="pomodoro-forest"></div>
+        </div>
+    </div>
+
+    <div class="card-productivity" style="background: rgba(255,255,255,0.03);">
+        <h3>Focus guardrails</h3>
+        <p class="lead">When the timer starts, enable Do Not Disturb and close distracting tabs. Pair this with the blocking list for full focus mode.</p>
+        <a class="btn-pill" href="?app=productivity&productivity_view=blocking">Update blocking rules →</a>
+    </div>
+</section>
+
+<script>
+(function () {
+    const app = document.getElementById("pomodoro-app");
+    if (!app) return;
+
+    const modeLabel = document.getElementById("pomodoro-mode");
+    const timeLabel = document.getElementById("pomodoro-time");
+    const cycleLabel = document.getElementById("pomodoro-cycle");
+    const startBtn = document.getElementById("pomodoro-start");
+    const pauseBtn = document.getElementById("pomodoro-pause");
+    const resetBtn = document.getElementById("pomodoro-reset");
+    const saveBtn = document.getElementById("pomodoro-save");
+    const settingsForm = app.querySelector(".config-card");
+
+    const levelEl = document.getElementById("pomodoro-level");
+    const xpEl = document.getElementById("pomodoro-xp");
+    const nextXpEl = document.getElementById("pomodoro-next-xp");
+    const totalEl = document.getElementById("pomodoro-total");
+    const streakEl = document.getElementById("pomodoro-streak");
+    const bestStreakEl = document.getElementById("pomodoro-best-streak");
+    const coinsEl = document.getElementById("pomodoro-coins");
+    const progressBar = document.getElementById("pomodoro-progress-bar");
+    const forestGrid = document.getElementById("pomodoro-forest");
+
+    const defaults = {
+        focus: parseInt(settingsForm.querySelector("input[name='focus']").value, 10),
+        short: parseInt(settingsForm.querySelector("input[name='short']").value, 10),
+        long: parseInt(settingsForm.querySelector("input[name='long']").value, 10),
+        cycles: parseInt(settingsForm.querySelector("input[name='cycles']").value, 10),
+    };
+    const STORAGE_KEY = "improve:pomodoro-defaults";
+    const storedDefaults = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (storedDefaults) {
+        ["focus", "short", "long", "cycles"].forEach((key) => {
+            if (storedDefaults[key]) {
+                defaults[key] = storedDefaults[key];
+                settingsForm.querySelector(`input[name='${key}']`).value = storedDefaults[key];
+            }
+        });
+    }
+
+    const TREE_EMOJI = {
+        Sprout: "🌱",
+        Sapling: "🌿",
+        Grove: "🌳",
+        Blossom: "🌸",
+        Ancient: "🪵",
+    };
+
+    let timer = null;
+    let mode = "focus";
+    let cycle = 1;
+    let remaining = defaults.focus * 60;
+    let activeSession = null;
+
+    function getCSRFToken() {
+        const match = document.cookie.match(/csrftoken=([^;]+)/);
+        return match ? match[1] : "";
+    }
+
+    async function fetchJSON(url, options = {}) {
+        const opts = Object.assign({
+            credentials: "same-origin",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCSRFToken(),
+            },
+        }, options);
+        const response = await fetch(url, opts);
+        if (!response.ok) {
+            const text = await response.text();
+            throw new Error(text || response.statusText);
+        }
+        return response.json();
+    }
+
+    function format(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    }
+
+    function setMode(nextMode, opts = {}) {
+        const { newCycle = cycle, newRemaining = null } = opts;
+        cycle = newCycle;
+        mode = nextMode;
+        if (newRemaining !== null) {
+            remaining = newRemaining;
+        } else {
+            if (mode === "focus") remaining = defaults.focus * 60;
+            if (mode === "short") remaining = defaults.short * 60;
+            if (mode === "long") remaining = defaults.long * 60;
+        }
+        modeLabel.textContent = mode === "focus" ? "Focus" : mode === "short" ? "Short Break" : "Long Break";
+        cycleLabel.textContent = `Cycle ${cycle}`;
+        timeLabel.textContent = format(remaining);
+    }
+
+    function showNotification(message) {
+        if ("Notification" in window) {
+            if (Notification.permission === "granted") {
+                new Notification(message);
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then((perm) => {
+                    if (perm === "granted") new Notification(message);
+                });
+            }
+        } else {
+            alert(message);
+        }
+    }
+
+    function stopTimer() {
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+    }
+
+    function startTimer(durationSeconds) {
+        stopTimer();
+        remaining = durationSeconds;
+        timeLabel.textContent = format(remaining);
+        timer = setInterval(() => {
+            remaining -= 1;
+            timeLabel.textContent = format(Math.max(0, remaining));
+            if (remaining <= 0) {
+                stopTimer();
+                completeSession();
+            }
+        }, 1000);
+    }
+
+    async function loadSummary() {
+        try {
+            const data = await fetchJSON("/api/pomodoro/summary/");
+            renderSummary(data);
+            if (data.active_session && !timer) {
+                activeSession = data.active_session;
+                const elapsed = data.active_session.elapsed_seconds;
+                const total = data.active_session.focus_minutes * 60;
+                const remainingSeconds = Math.max(1, total - elapsed);
+                setMode("focus", {
+                    newCycle: data.active_session.current_cycle,
+                    newRemaining: remainingSeconds,
+                });
+                startTimer(remainingSeconds);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function renderSummary(data) {
+        const profile = data.profile;
+        levelEl.textContent = profile.level;
+        xpEl.textContent = profile.xp;
+        nextXpEl.textContent = profile.xp_for_next_level;
+        totalEl.textContent = profile.total_focus_minutes;
+        streakEl.textContent = profile.streak_count;
+        bestStreakEl.textContent = profile.best_streak;
+        coinsEl.textContent = profile.coins;
+        const progressPct = Math.min(100, Math.round((profile.xp_progress / Math.max(1, profile.xp_needed_for_next)) * 100));
+        progressBar.style.width = `${progressPct}%`;
+
+        forestGrid.innerHTML = "";
+        if (data.forest && data.forest.length) {
+            data.forest.forEach((tree) => {
+                const li = document.createElement("div");
+                li.className = "forest-card";
+                li.innerHTML = `
+                    <div class="emoji">${TREE_EMOJI[tree.tree_type] || "🌱"}</div>
+                    <strong>${tree.tree_type}</strong>
+                    <div class="lead">${tree.focus_minutes} min</div>
+                    <small>${tree.planted_at}</small>
+                `;
+                forestGrid.appendChild(li);
+            });
+        } else {
+            forestGrid.innerHTML = '<div class="empty-state">Complete a focus session to plant your first tree.</div>';
+        }
+    }
+
+    async function startSession() {
+        try {
+            const payload = {
+                focus_minutes: parseInt(settingsForm.querySelector("input[name='focus']").value, 10) || defaults.focus,
+                short_break_minutes: parseInt(settingsForm.querySelector("input[name='short']").value, 10) || defaults.short,
+                long_break_minutes: parseInt(settingsForm.querySelector("input[name='long']").value, 10) || defaults.long,
+                cycles_before_long_break: parseInt(settingsForm.querySelector("input[name='cycles']").value, 10) || defaults.cycles,
+            };
+            const data = await fetchJSON("/api/pomodoro/start/", {
+                method: "POST",
+                body: JSON.stringify(payload),
+            });
+            activeSession = data.session;
+            setMode("focus", { newCycle: data.session.current_cycle, newRemaining: data.session.focus_minutes * 60 });
+            startTimer(data.session.focus_minutes * 60);
+            if ("Notification" in window && Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function completeSession() {
+        if (!activeSession) {
+            loadSummary();
+            return;
+        }
+        try {
+            const completedMinutes = Math.max(
+                1,
+                Math.round((activeSession.focus_minutes * 60 - Math.max(remaining, 0)) / 60)
+            );
+            const data = await fetchJSON("/api/pomodoro/complete/", {
+                method: "POST",
+                body: JSON.stringify({
+                    session_id: activeSession.id,
+                    completed_minutes: completedMinutes,
+                }),
+            });
+            activeSession = null;
+            showNotification("Focus block complete! Time for a break.");
+            renderSummary(data.summary);
+            loadSummary();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    async function cancelSession() {
+        if (!activeSession) return;
+        try {
+            await fetchJSON("/api/pomodoro/cancel/", {
+                method: "POST",
+                body: JSON.stringify({ session_id: activeSession.id }),
+            });
+        } catch (error) {
+            console.error(error);
+        }
+        activeSession = null;
+    }
+
+    startBtn.addEventListener("click", () => {
+        if (timer) return;
+        if (activeSession) {
+            startTimer(remaining);
+            return;
+        }
+        startSession();
+    });
+
+    pauseBtn.addEventListener("click", () => {
+        if (!timer) return;
+        stopTimer();
+    });
+
+    resetBtn.addEventListener("click", async () => {
+        stopTimer();
+        await cancelSession();
+        setMode("focus", { newCycle: 1 });
+    });
+
+    saveBtn.addEventListener("click", async () => {
+        const data = {
+            focus: parseInt(settingsForm.querySelector("input[name='focus']").value, 10) || defaults.focus,
+            short: parseInt(settingsForm.querySelector("input[name='short']").value, 10) || defaults.short,
+            long: parseInt(settingsForm.querySelector("input[name='long']").value, 10) || defaults.long,
+            cycles: parseInt(settingsForm.querySelector("input[name='cycles']").value, 10) || defaults.cycles,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        Object.assign(defaults, data);
+        setMode(mode, { newCycle: cycle });
+        saveBtn.textContent = "Saved";
+        setTimeout(() => (saveBtn.textContent = "Save defaults"), 1200);
+    });
+
+    loadSummary();
+})();
+</script>

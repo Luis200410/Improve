@@ -1,0 +1,103 @@
+<div class="card-productivity" id="habit-tracker">
+    <h3>Habit Tracking</h3>
+    <p class="lead">Mark your daily completions and keep streaks alive. Check-ins are stored locally so you can sync later.</p>
+
+    {% if productivity_habits %}
+        <style>
+            #habit-tracker .habit-grid {
+                display: grid;
+                gap: 0.8rem;
+            }
+            @media (min-width: 900px) {
+                #habit-tracker .habit-grid {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+            }
+        </style>
+        <div class="habit-grid">
+            {% for habit in productivity_habits %}
+                <div class="habit-item" data-habit="{{ habit.id }}">
+                    <label>
+                        <input type="checkbox">
+                        <span>
+                            <strong>{{ habit.name }}</strong>
+                            <div class="lead">{{ habit.get_frequency_display }} • target {{ habit.target_per_period }}</div>
+                        </span>
+                    </label>
+                    <div class="metric-chip streak">0-day streak</div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="actions-inline" style="margin-top:1rem;">
+            <button class="btn-pill primary" id="habit-save">Save today</button>
+            <button class="btn-pill" id="habit-clear">Reset</button>
+        </div>
+    {% else %}
+        <p class="empty-state">No habits found. Create habits in the Body system and they’ll appear here.</p>
+    {% endif %}
+</div>
+
+<script>
+(function() {
+    const container = document.getElementById("habit-tracker");
+    if (!container) return;
+
+    const STORAGE_KEY = `improve:habit:${new Date().toISOString().slice(0,10)}`;
+    const legacyKeys = Object.keys(localStorage).filter((key) => key.startsWith("improve:habit:"));
+    legacyKeys.slice(0, -7).forEach((key) => localStorage.removeItem(key));
+
+    const habits = Array.from(container.querySelectorAll(".habit-item"));
+    const saveBtn = container.querySelector("#habit-save");
+    const clearBtn = container.querySelector("#habit-clear");
+
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (saved) {
+        habits.forEach((row) => {
+            const id = row.dataset.habit;
+            const checkbox = row.querySelector("input[type='checkbox']");
+            const streakChip = row.querySelector(".streak");
+            if (saved[id]) {
+                checkbox.checked = saved[id].checked;
+                streakChip.textContent = `${saved[id].streak}-day streak`;
+            }
+        });
+    }
+
+    function persist() {
+        const data = {};
+        habits.forEach((row) => {
+            const id = row.dataset.habit;
+            const checkbox = row.querySelector("input[type='checkbox']");
+            const streakChip = row.querySelector(".streak");
+            const streak = parseInt(streakChip.textContent, 10) || 0;
+            data[id] = { checked: checkbox.checked, streak };
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    saveBtn?.addEventListener("click", () => {
+        habits.forEach((row) => {
+            const checkbox = row.querySelector("input[type='checkbox']");
+            const streakChip = row.querySelector(".streak");
+            let streak = parseInt(streakChip.textContent, 10) || 0;
+            if (checkbox.checked) {
+                streak += 1;
+            } else {
+                streak = 0;
+            }
+            streakChip.textContent = `${streak}-day streak`;
+        });
+        persist();
+        saveBtn.textContent = "Saved";
+        setTimeout(() => (saveBtn.textContent = "Save today"), 1200);
+    });
+
+    clearBtn?.addEventListener("click", () => {
+        habits.forEach((row) => {
+            row.querySelector("input[type='checkbox']").checked = false;
+            row.querySelector(".streak").textContent = "0-day streak";
+        });
+        persist();
+    });
+})();
+</script>
